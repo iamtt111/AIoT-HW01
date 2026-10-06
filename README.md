@@ -1,108 +1,62 @@
-# CWA 台灣縣市天氣預報
+# CWA 臺灣縣市天氣預報
 
-使用中央氣象署（CWA）開放資料建置的台灣縣市天氣預報網站。使用者可選擇縣市與
-日期範圍，在互動式地圖查看最高溫、降雨機率、紫外線與風速，並閱讀溫度趨勢與各
-預報時段的詳細資料。
+以中央氣象署（CWA）開放資料為來源的互動式臺灣縣市預報網站。網站把最新一次同步完成的預報保存在 Supabase PostgreSQL，前端讀取資料庫提供的 API；一般使用者瀏覽地圖或切換縣市不會直接呼叫 CWA。
 
 ## Live Demo
 
 [https://aiot-hw01.vercel.app/](https://aiot-hw01.vercel.app/)
 
-## 管理員操作
+## 功能
 
-管理頁位於 `/admin`，不會在首頁顯示。登入成功後，伺服器會建立 **30 分鐘、HttpOnly、Secure、SameSite=Strict** 的簽章 session cookie；密碼與 session secret 都不會傳回瀏覽器。
+- 以 Leaflet 呈現可點擊的臺灣縣市預報地圖。
+- 以「溫度、降雨機率、紫外線、風速」四項指標切換地圖色階與詳細圖表。
+- 顯示明確的 12 小時預報時段列，預設選取下一個即將到來的時段。
+- 點擊地圖縣市後，自動填入該縣市完整的可用預報日期範圍，並移至詳細資訊。
+- 提供同步的縣市選單，作為鍵盤與輔助科技可用的替代操作。
+- 詳細區顯示與地圖指標連動的圖表，以及使用天氣圖示與短標籤的預報表格。
+- 地圖左下角顯示資料更新狀態；若同步失敗，仍保留最後成功的資料。
+- 受保護的 `/admin` 路由可檢視同步資訊並手動觸發 GitHub Actions workflow。
 
-### 1. 設定 Vercel 環境變數
+## 資料與更新頻率
 
-在 Vercel 的 **Preview** 與 **Production** 都設定既有的 `SUPABASE_URL`、`SUPABASE_SECRET_KEY`，並新增：
+| 項目 | 說明 |
+| --- | --- |
+| CWA 資料集 | `F-D0047-091`（一般天氣預報） |
+| 資料內容 | 縣市未來一週預報，含 12 小時時段資料 |
+| CWA 發布頻率 | 原始資料約每 6 小時發布一次 |
+| GitHub Actions 排程 | 每 6 小時一次：UTC `03:35`、`09:35`、`15:35`、`21:35`；約為臺灣時間 `11:35`、`17:35`、`23:35`、`05:35` |
+| 使用者查詢 | 僅讀取 Supabase 中已同步的資料，不直接呼叫 CWA API |
 
-```env
-ADMIN_PASSWORD=<長且唯一的管理密碼>
-ADMIN_SESSION_SECRET=<至少 32 字元的隨機字串>
-GITHUB_ACTIONS_SYNC_TOKEN=<fine-grained GitHub token>
-GITHUB_REPOSITORY=<owner>/<repository>
-GITHUB_SYNC_REF=main
-```
-
-`GITHUB_ACTIONS_SYNC_TOKEN` 應建立為僅限此 repository 的 fine-grained token，並只授予 **Actions: Read and write**。它只用於由 `/api/admin/sync` 觸發既有的 `cwa-forecast-sync.yml`，CWA API key 與 `SUPABASE_DB_URL` 仍只保留在 GitHub Actions Secrets。
-
-### 2. 手動同步與原始回應
-
-部署後開啟 `<網站網址>/admin`：
-
-- **執行手動同步**：先查詢是否已有執行中的同步；沒有才向 GitHub Actions 建立 workflow dispatch。畫面顯示「已交給 GitHub Actions」代表 dispatch 成功接受，實際資料結果請在 Actions run 或首頁資料狀態確認。
-- **顯示最新原始回應**：僅登入後可取得，回應包含 sync metadata 與保留 JSON。任何含有 authorization、token、secret、password 或 configured secret 值的內容都會以 `[REDACTED]` 取代。
-- 若 API 回傳 `409`，代表已有同步在執行，等待既有 run 結束後再試；若 dispatch 失敗，請檢查 GitHub token 是否過期、repository 名稱與 workflow 是否仍存在。
-
-若需要撤銷管理存取，請先在 Vercel 旋轉 `ADMIN_PASSWORD`、`ADMIN_SESSION_SECRET` 或 GitHub token，再重新部署；舊 session 會立即失效。若 CWA 同步失敗，系統仍保留上一個成功版本供公開儀表板讀取，可在 Actions 修正設定後重新執行 workflow。
-
-### 3. 本機 production 模式驗證
-
-先複製 `web/.env.example` 為忽略的 `web/.env.local`，填入上列變數，然後執行：
-
-```powershell
-cd web
-npm.cmd run build
-npm.cmd run start
-```
-
-開啟 `http://localhost:3000/admin` 測試登入與登出。若瀏覽器不接受 localhost 的 Secure cookie，請改用 Vercel Preview URL 驗證。不要把 `CWA_API_KEY` 或 `SUPABASE_DB_URL` 放入 `web/.env.local` 或 Vercel。
-
-## 主要功能
-
-- 依縣市及日期／日期範圍查詢 CWA 預報。
-- Leaflet 台灣縣市地圖，支援最高溫、降雨機率、紫外線、風速四種圖層。
-- 選取縣市的最高／最低溫趨勢圖與預報明細表。
-- 顯示最新同步狀態、最後成功更新時間，以及空資料、錯誤與過期資料狀態。
-- 保留目前預報、不可變歷史版本、同步紀錄與受保護的原始 API 回應。
-
-## 資料來源與更新頻率
-
-- 資料集：CWA Open Data `F-D0047-091` 縣市預報。
-- 同步方式：GitHub Actions 執行 Python 同步程式，抓取、正規化並寫入 Supabase。
-- CWA 發布時機：台灣時間 `05:30`、`11:30`、`17:30`、`23:30`。
-- 排程：每 **6 小時** 一次，並在發布後 5 分鐘抓取；UTC `03:35`、`09:35`、`15:35`、
-  `21:35`，換算台灣時間為 `11:35`、`17:35`、`23:35`、隔日 `05:35`。
-- 網站會在每次頁面／API 請求時讀取最新已成功同步的資料，並非即時觀測站資料。
-- GitHub Actions 的免費排程可能延遲；若最近一次同步失敗，網站保留前一次成功資料並
-  顯示最後成功時間。
+排程刻意在常見發布時間後保留緩衝，降低抓到尚未更新版本的機率。也可在 GitHub Actions 的 **Synchronize CWA forecast** 使用手動執行。
 
 ## 技術棧
 
-| 領域 | 技術 |
-| --- | --- |
-| 前端與伺服器端 API | Next.js 16、React 19、TypeScript、App Router |
-| 樣式 | Tailwind CSS 4 |
-| 地圖 | Leaflet、React Leaflet、GeoJSON |
-| 圖表與日期處理 | Recharts、date-fns |
-| 資料處理 | Python 3.12、httpx、psycopg、python-dotenv |
-| 資料庫 | Supabase PostgreSQL、PostgREST、pgTAP |
-| 自動化 | GitHub Actions、OpenSpec |
-| 部署 | Vercel |
+- Frontend：Next.js 16、React 19、TypeScript、Tailwind CSS 4
+- 地圖與圖表：Leaflet、React Leaflet、Recharts、Lucide
+- Backend boundary：Next.js Route Handlers、PostgREST
+- 資料庫：Supabase PostgreSQL
+- 擷取與排程：Python 3.12、GitHub Actions
+- 資料庫驗證：Supabase CLI、pgTAP
+- 規格管理：OpenSpec
+- 部署：Vercel
 
-## 專案結構
+## 使用方式
 
-```text
-web/                         Next.js 儀表板與 server-side 唯讀 API
-ingestion/                   CWA 抓取、解析與 PostgreSQL 同步程式
-supabase/migrations/         Supabase schema 與前向 migration
-supabase/tests/database/     pgTAP 資料庫測試
-.github/workflows/           六小時預報同步 workflow
-openspec/changes/            OpenSpec 規格、設計與任務紀錄
-```
+### 瀏覽儀表板
 
-## 本機執行
+1. 在地圖頂端選擇要看的指標與 12 小時預報時段。
+2. 點擊地圖上的縣市；被選取的縣市會高亮，日期自動改為該縣市完整的預報範圍。
+3. 向下查看與目前指標相同的圖表及時段表格。
+4. 不使用地圖時，可直接用頁面右上角的「縣市」選單操作。
 
-### 1. 啟動網站
+### 本機啟動前端
 
-在 `web/.env.local` 建立以下伺服器端環境變數：
+在 `web/.env.local` 設定伺服器端環境變數：
 
 ```env
 SUPABASE_URL=https://<project-ref>.supabase.co
 SUPABASE_SECRET_KEY=sb_secret_...
 ```
-
-接著執行：
 
 ```powershell
 cd web
@@ -110,75 +64,34 @@ npm.cmd install
 npm.cmd run dev
 ```
 
-開啟 [http://localhost:3000](http://localhost:3000)。`SUPABASE_SECRET_KEY` 僅供
-Next.js route handlers 使用；不得加入 `NEXT_PUBLIC_` 前綴、提交到 Git，或放入瀏覽器
-端程式碼。
+開啟 [http://localhost:3000](http://localhost:3000)。
 
-### 2. 本機資料庫與 migration
+> 請勿使用 `NEXT_PUBLIC_` 前綴公開 Supabase Secret key、CWA API key 或管理員密碼。
 
-需先啟動 Docker Desktop 的 Linux engine：
+### 管理員與手動同步
 
-```powershell
-npx.cmd supabase@latest start
-npx.cmd supabase@latest db reset
-npx.cmd supabase@latest test db
-```
-
-`db reset` 會重建**本機**資料庫並清除其中資料，不應對已含重要資料的遠端專案執行。
-
-將 migration 推送到已連結的遠端 Supabase 專案前，先檢查預覽：
-
-```powershell
-npx.cmd supabase@latest db push --dry-run
-npx.cmd supabase@latest db push
-npx.cmd supabase@latest migration list
-```
-
-### Migration 與同步復原原則
-
-- 已套用到遠端的 migration 不要修改或刪除；若 schema 需要修正，新增一個**前向 migration** 後先執行 `db push --dry-run`。
-- `supabase db reset` 僅適用於本機 Docker 開發資料庫，絕不可用於雲端 Supabase 專案。
-- 同步失敗時，`current_forecasts` 會保留上一個成功版本。先查看 GitHub Actions log 或管理頁的受保護 raw payload，再修正 CWA／資料庫設定並重新執行 **Synchronize CWA forecast**；不需要刪除既有預報資料。
-- 若需暫停更新，先在 GitHub Actions 停用 workflow 或停止管理頁手動觸發，確認問題排除後再重新啟用並執行一次同步。
-
-### 3. 手動執行同步程式
-
-Python 程式需要 CWA API key 與 PostgreSQL connection string：
-
-```powershell
-py -3.12 -m pip install ./ingestion
-$env:CWA_API_KEY = '<your-cwa-api-key>'
-$env:SUPABASE_DB_URL = '<transaction-pooler-postgresql-uri>'
-py -3.12 -m cwa_weather_ingestion
-```
-
-`SUPABASE_DB_URL` 使用 Supabase **Transaction pooler** 的 PostgreSQL URI，供短生命週期
-的 GitHub Actions 同步工作使用；它不是 Vercel 網站使用的 `SUPABASE_URL`。
-
-## 部署與環境變數
-
-### Vercel
-
-將 `web/` 設為 Root Directory，並在 Preview 與 Production 設定：
+在 Vercel（Preview 與 Production）設定：
 
 ```env
 SUPABASE_URL=https://<project-ref>.supabase.co
 SUPABASE_SECRET_KEY=sb_secret_...
+ADMIN_PASSWORD=<strong-password>
+ADMIN_SESSION_SECRET=<random-secret-at-least-32-characters>
+GITHUB_ACTIONS_SYNC_TOKEN=<fine-grained-github-token>
+GITHUB_REPOSITORY=<owner>/<repository>
+GITHUB_SYNC_REF=main
 ```
 
-不要在 Vercel 設定 `CWA_API_KEY` 或 `SUPABASE_DB_URL`；公開網站只負責讀取已同步的資料。
+`GITHUB_ACTIONS_SYNC_TOKEN` 需要此 repository 的 **Actions: Read and write** 權限。登入 `/admin` 後可查看最近同步結果與觸發 workflow；憑證不會在前端回傳。
 
-### GitHub Actions
-
-在 repository 的 `Settings` → `Secrets and variables` → `Actions` 建立：
+GitHub Actions Secrets 需設定：
 
 ```text
 CWA_API_KEY
 SUPABASE_DB_URL
 ```
 
-`cwa-forecast-sync.yml` 使用這兩個 secret 執行同步。手動更新可到 GitHub Actions 的
-**Synchronize CWA forecast** workflow 選擇 **Run workflow**。
+`SUPABASE_DB_URL` 應使用 Supabase **Transaction pooler** PostgreSQL URI，讓 GitHub Actions 的 IPv4 runner 能連線免費方案資料庫。
 
 ## 驗證
 
@@ -186,7 +99,7 @@ SUPABASE_DB_URL
 # Database
 npx.cmd supabase@latest test db
 
-# Python
+# Python ingestion
 cd ingestion
 py -3.12 -m unittest discover -s tests -v
 
@@ -194,21 +107,17 @@ py -3.12 -m unittest discover -s tests -v
 cd ../web
 npm.cmd run lint
 npm.cmd run test
-npm.cmd run build
 npm.cmd run check:client-secrets
+npm.cmd run build
 ```
 
-## 安全注意事項
+## 專案結構
 
-- 不要提交 `.env`、`.env.local`、CWA API key、Supabase secret key、資料庫密碼或 GitHub token。
-- CWA API key 與 `SUPABASE_DB_URL` 只存在 GitHub Actions Secrets。
-- `SUPABASE_SECRET_KEY` 僅存在本機未提交檔案與 Vercel server-side environment variables。
-- 瀏覽器只會呼叫 Next.js 公開讀取 API，不會取得 CWA 或 Supabase 的寫入權限。
-
-## 目前驗證狀態
-
-本機已驗證 22 個 Python 測試（含 PostgreSQL 整合測試）、ESLint、15 個前端測試、
-production build 與 client-secret bundle 檢查。公開 API 已確認可回傳 22 個縣市、日期
-篩選結果及溫度、降雨機率、紫外線與風速欄位。
-
-管理員操作功能依 OpenSpec Task 6 延後，尚未實作或部署。
+```text
+web/                         Next.js 網站、管理員頁面與 API routes
+ingestion/                   CWA 下載、正規化與 PostgreSQL 寫入
+supabase/migrations/         Supabase schema migrations
+supabase/tests/database/     pgTAP 資料完整性與存取測試
+.github/workflows/           六小時同步 workflow
+openspec/                    功能規劃與變更紀錄
+```
