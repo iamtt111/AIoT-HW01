@@ -1,39 +1,44 @@
-# CWA 天氣預報網站
+# CWA 縣市天氣預報 MVP
 
-以 CWA `F-D0047-091` 鄉鎮預報為資料來源的台灣天氣預報網站。MVP 使用
-Python 執行資料同步、Supabase PostgreSQL 保存版本化預報，並由 Next.js/Vercel
-提供繁體中文的查詢與地圖介面。
+本專案使用 CWA `F-D0047-091` 縣市預報資料。Python 同步程式會將資料保存到
+Supabase PostgreSQL，Next.js 網站以唯讀 API 顯示臺灣縣市地圖、預報趨勢與明細。
 
-## 專案結構
+## 專案目錄
 
-- `web/`：Next.js 前端與 server-side query routes。
-- `ingestion/`：CWA 預報同步 Python 套件。
-- `supabase/migrations/`：唯一可信的資料庫 schema 歷程。
-- `supabase/tests/database/`：使用 pgTAP 的資料庫測試。
-- `openspec/changes/add-cwa-weather-forecast-mvp/`：本次變更的設計與任務追蹤。
+- `web/`：Next.js 儀表板與伺服器端唯讀 API。
+- `ingestion/`：CWA 下載、正規化與 Supabase 同步程式。
+- `supabase/migrations/`：資料庫結構與前向 migration。
+- `supabase/tests/database/`：資料庫 pgTAP 測試。
+- `openspec/changes/add-cwa-weather-forecast-mvp/`：本功能的規格與實作任務。
 
-## 資料庫權限模型
+## 儀表板預覽與使用方式
 
-瀏覽器不直接連接 Supabase 的 forecast tables。`anon` 與
-`authenticated` 角色沒有 forecast tables 的讀寫權限，也無法讀取
-`raw_payloads`。公開查詢會經由 Next.js server routes；只有部署環境的
-server-side `service_role` 可以執行同步、讀取 raw payload 或更新預報資料。
+在 `web/` 目錄建立未提交的 `.env.local`，設定伺服器端讀取所需的
+`SUPABASE_URL` 與 `SUPABASE_SECRET_KEY`，再啟動本機預覽：
 
-不要將 `SUPABASE_SERVICE_ROLE_KEY`、Database Password、CWA API key 或
-Supabase Personal Access Token 放進 Git、`NEXT_PUBLIC_*` 變數或瀏覽器程式碼。
-可參考根目錄與 `web/` 下的 `.env.example` 範本。
+```powershell
+cd web
+npm.cmd run dev
+```
 
-## 本機資料庫開發
+開啟 `http://localhost:3000` 後，先選擇縣市，再以開始／結束日期限制預報範圍。
+空白日期表示不額外限制期間；若輸入的開始日比結束日晚，介面會自動調整為有效
+日期範圍。
 
-### 前置需求
+地圖的「最高溫、降雨機率、紫外線、風速」選單會改變縣市色階及提示框中的數值。
+灰色縣市與「無資料」代表 CWA 在該選定範圍未提供那個指標，並非零值。下方折線圖
+呈現所選縣市每個回傳預報時段的最高與最低溫；表格則列出完整的天氣、溫度、降雨
+機率、紫外線與風速欄位。
 
-- Docker Desktop 已啟動，且 Linux engine 顯示 running。
-- Node.js / npm 可用；Windows PowerShell 請使用 `npx.cmd`。
-- 已在專案根目錄執行過 `npx.cmd supabase@latest init`。
+資料由 GitHub Actions 每六小時同步一次。若最新同步失敗，儀表板會保留並標示前
+一次成功資料及其時間；因此畫面中的資料不保證是即時觀測，也可能晚於 CWA 最新
+發布版本。地圖底圖由 OpenStreetMap 提供，縣市界線使用專案內版本化的
+`web/public/data/taiwan-counties.geojson`。
 
-### 啟動、套用 schema 與測試
+## 資料庫與同步
 
-在專案根目錄執行：
+開發用的本機 Supabase 需要 Docker Desktop 的 Linux engine。以下指令會建立或重設
+本機資料庫；`db reset` 會刪除本機資料，請勿用在已含重要資料的遠端專案。
 
 ```powershell
 npx.cmd supabase@latest start
@@ -41,56 +46,24 @@ npx.cmd supabase@latest db reset
 npx.cmd supabase@latest test db
 ```
 
-`db reset` 會**刪除本機 Supabase 資料**，再依時間戳順序重跑
-`supabase/migrations/`；僅限本機開發環境。`test db` 會執行
-`supabase/tests/database/` 的 pgTAP 測試。預期目前有 2 個測試檔、29 個測試。
-
-資料表與目的如下：
-
-- `locations`：縣市／鄉鎮的穩定代碼與顯示名稱。
-- `sync_runs`：每次同步的狀態、時間、checksum 與錯誤摘要。
-- `forecast_versions`、`forecast_records`：不可變的來源版本與預報期間記錄。
-- `current_forecasts`：最新成功版本的快速查詢投影。
-- `raw_payloads`：僅供管理操作檢視的 CWA 原始回應。
-- `sync_locks`：阻止同時執行兩次預報同步的租約鎖。
-
-## 推送 migration 至 Supabase 雲端
-
-先建立 Supabase project，並將本機目錄連結到它。`<PROJECT_REF>` 可從
-Dashboard 的 project URL 取得。
+將 migration 推送至已連結的 Supabase 專案前，先確認預覽結果：
 
 ```powershell
-npx.cmd supabase@latest login
-npx.cmd supabase@latest link --project-ref <PROJECT_REF>
 npx.cmd supabase@latest db push --dry-run
 npx.cmd supabase@latest db push
 npx.cmd supabase@latest migration list
 ```
 
-只有 `supabase/migrations/` 中的新 migration 可以變更遠端 schema。不要在
-Dashboard SQL Editor 或 Table Editor 直接建立／修改 schema，否則本機 migration
-歷程會和遠端的 `supabase_migrations.schema_migrations` 失去同步。
+資料表包含目前預報、不可變版本、同步紀錄與受保護原始回應。若同步程式解析或
+上游請求失敗，既有的目前預報會保留，方便修正後重新執行同步。
 
-## 回復與重新同步原則
+## 驗證
 
-### Schema 回復
+```powershell
+cd web
+npm.cmd run test
+npm.cmd run build
+```
 
-- 已推送至雲端的 migration 不要修改或刪除。
-- 若 schema 有問題，建立新的「向前修正」migration，再依序執行
-  `db push --dry-run` 和 `db push`。
-- 不要對 production 使用 `supabase db reset --linked`；它會刪除遠端資料。
-- 先用 `npx.cmd supabase@latest migration list` 確認本機與遠端版本；若不一致，
-  先停止並檢查是否有人在 Dashboard 直接改過 schema。
-
-### 預報資料回復
-
-- 若同步或 parser 有問題，停用排程／手動同步入口，不要清空
-  `current_forecasts`。
-- 修正 parser 後再執行一次同步；只有內容變更時才會建立新的
-  `forecast_versions`，因此既有成功版本可保留。
-- 實際的 `cwa-weather-sync` 重新同步命令會在 ingestion 功能完成後加入本節。
-
-## 目前狀態
-
-資料庫 schema、完整性約束、同步鎖與 RLS 已實作並通過本機 pgTAP 測試。CWA
-資料擷取、排程、Next.js 查詢 routes 與公開 dashboard 尚在實作中。
+Python 同步程式與 CWA API 金鑰只會在受信任的同步環境中執行。請勿將 `.env.local`、
+CWA API Key、Supabase secret key、資料庫密碼或 GitHub token 提交至版本庫。

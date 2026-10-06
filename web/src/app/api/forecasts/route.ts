@@ -13,15 +13,14 @@ function optionalIsoTime(value: string | null, field: string): string | undefine
 }
 
 export async function GET(request: NextRequest) {
-  const countyCode = request.nextUrl.searchParams.get("county_code")?.trim();
-  if (!countyCode) {
-    return NextResponse.json({ error: "county_code is required" }, { status: 400 });
+  const areaCode = request.nextUrl.searchParams.get("area_code")?.trim();
+  if (!areaCode) {
+    return NextResponse.json({ error: "area_code is required" }, { status: 400 });
   }
 
   try {
     const filters: ForecastFilters = {
-      countyCode,
-      townCode: request.nextUrl.searchParams.get("town_code")?.trim() || undefined,
+      areaCode,
       startsAt: optionalIsoTime(request.nextUrl.searchParams.get("starts_at"), "starts_at"),
       endsAt: optionalIsoTime(request.nextUrl.searchParams.get("ends_at"), "ends_at"),
     };
@@ -34,6 +33,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     console.error("Unable to load latest forecasts", error);
-    return NextResponse.json({ error: "目前無法讀取預報資料。" }, { status: 503 });
+    return NextResponse.json({ error: "暫時無法取得預報資料" }, { status: 503 });
   }
 }

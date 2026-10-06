@@ -1,6 +1,7 @@
-import type { Location } from "./forecast-locations";
+import type { ForecastArea } from "./forecast-locations";
+import { serverSupabaseConfig } from "./server-supabase";
 
-export type ForecastRecord = Location & {
+export type ForecastRecord = ForecastArea & {
   validFrom: string;
   validTo: string;
   weatherDescription: string | null;
@@ -17,8 +18,7 @@ export type ForecastRecord = Location & {
 };
 
 export type ForecastFilters = {
-  countyCode: string;
-  townCode?: string;
+  areaCode: string;
   startsAt?: string;
   endsAt?: string;
 };
@@ -38,26 +38,14 @@ type CurrentForecastRow = {
   wind_direction_degrees: number | null;
   wind_description: string | null;
   location: {
-    county_code: string;
-    county_name: string;
-    town_code: string;
-    town_name: string;
+    area_code: string;
+    area_name: string;
   } | null;
 };
 
-function serverSupabaseConfig(): { url: string; serviceRoleKey: string } {
-  const url = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceRoleKey) {
-    throw new Error("Server-side Supabase credentials are not configured");
-  }
-  return { url: url.replace(/\/$/, ""), serviceRoleKey };
-}
-
 export function filterForecastRecords(records: ForecastRecord[], filters: ForecastFilters): ForecastRecord[] {
   return records.filter((record) => {
-    if (record.countyCode !== filters.countyCode) return false;
-    if (filters.townCode && record.townCode !== filters.townCode) return false;
+    if (record.areaCode !== filters.areaCode) return false;
     if (filters.startsAt && record.validTo < filters.startsAt) return false;
     if (filters.endsAt && record.validFrom > filters.endsAt) return false;
     return true;
@@ -68,7 +56,7 @@ export async function getLatestForecasts(
   filters: ForecastFilters,
   fetcher: typeof fetch = fetch,
 ): Promise<ForecastRecord[]> {
-  const { url, serviceRoleKey } = serverSupabaseConfig();
+  const { url, secretKey } = serverSupabaseConfig();
   const endpoint = new URL(`${url}/rest/v1/current_forecasts`);
   endpoint.searchParams.set(
     "select",
@@ -76,11 +64,10 @@ export async function getLatestForecasts(
       "valid_from,valid_to,weather_description,weather_code,precipitation_probability",
       "min_temperature_c,max_temperature_c,apparent_min_temperature_c,apparent_max_temperature_c",
       "uv_index,wind_speed_mps,wind_direction_degrees,wind_description",
-      "location:locations!inner(county_code,county_name,town_code,town_name)",
+      "location:locations!inner(area_code,area_name)",
     ].join(","),
   );
-  endpoint.searchParams.set("location.county_code", `eq.${filters.countyCode}`);
-  if (filters.townCode) endpoint.searchParams.set("location.town_code", `eq.${filters.townCode}`);
+  endpoint.searchParams.set("location.area_code", `eq.${filters.areaCode}`);
   if (filters.startsAt) endpoint.searchParams.set("valid_to", `gte.${filters.startsAt}`);
   if (filters.endsAt) endpoint.searchParams.set("valid_from", `lte.${filters.endsAt}`);
   endpoint.searchParams.set("order", "valid_from.asc");
@@ -88,8 +75,8 @@ export async function getLatestForecasts(
   const response = await fetcher(endpoint, {
     cache: "no-store",
     headers: {
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
+      apikey: secretKey,
+      Authorization: `Bearer ${secretKey}`,
     },
   });
   if (!response.ok) {
@@ -100,10 +87,8 @@ export async function getLatestForecasts(
   return rows.flatMap((row) => {
     if (!row.location) return [];
     return [{
-      countyCode: row.location.county_code,
-      countyName: row.location.county_name,
-      townCode: row.location.town_code,
-      townName: row.location.town_name,
+      areaCode: row.location.area_code,
+      areaName: row.location.area_name,
       validFrom: row.valid_from,
       validTo: row.valid_to,
       weatherDescription: row.weather_description,

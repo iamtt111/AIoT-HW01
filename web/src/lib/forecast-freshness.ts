@@ -14,15 +14,6 @@ type SyncRunRow = {
   completed_at: string | null;
 };
 
-function serverSupabaseConfig(): { url: string; serviceRoleKey: string } {
-  const url = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceRoleKey) {
-    throw new Error("Server-side Supabase credentials are not configured");
-  }
-  return { url: url.replace(/\/$/, ""), serviceRoleKey };
-}
-
 export function deriveFreshness(latest: SyncRun | null, lastSuccessfulAt: string | null): Freshness {
   if (!latest) {
     return { status: "unavailable", lastSuccessfulAt: null, latestSyncStatus: null };
@@ -39,7 +30,7 @@ export function deriveFreshness(latest: SyncRun | null, lastSuccessfulAt: string
 
 async function getRun(
   url: string,
-  serviceRoleKey: string,
+  secretKey: string,
   statusFilter: string | undefined,
   fetcher: typeof fetch,
 ): Promise<SyncRun | null> {
@@ -51,7 +42,7 @@ async function getRun(
   endpoint.searchParams.set("limit", "1");
   const response = await fetcher(endpoint, {
     cache: "no-store",
-    headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` },
+    headers: { apikey: secretKey, Authorization: `Bearer ${secretKey}` },
   });
   if (!response.ok) throw new Error(`Supabase sync status query failed with HTTP ${response.status}`);
   const rows = (await response.json()) as SyncRunRow[];
@@ -60,10 +51,11 @@ async function getRun(
 }
 
 export async function getForecastFreshness(fetcher: typeof fetch = fetch): Promise<Freshness> {
-  const { url, serviceRoleKey } = serverSupabaseConfig();
-  const latest = await getRun(url, serviceRoleKey, undefined, fetcher);
+  const { url, secretKey } = serverSupabaseConfig();
+  const latest = await getRun(url, secretKey, undefined, fetcher);
   const latestSuccess = latest?.status === "succeeded"
     ? latest
-    : await getRun(url, serviceRoleKey, "eq.succeeded", fetcher);
+    : await getRun(url, secretKey, "eq.succeeded", fetcher);
   return deriveFreshness(latest, latestSuccess?.completedAt ?? null);
 }
+import { serverSupabaseConfig } from "./server-supabase";

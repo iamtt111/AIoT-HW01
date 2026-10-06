@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getCurrentLocations, selectLocations } from "@/lib/forecast-locations";
+import { getCurrentAreas, selectAreas } from "@/lib/forecast-locations";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
-  const countyCode = request.nextUrl.searchParams.get("county_code")?.trim() || undefined;
+export async function GET(_request: NextRequest) {
   try {
-    const selection = selectLocations(await getCurrentLocations(), countyCode);
-    return NextResponse.json(selection);
+    return NextResponse.json({ areas: selectAreas(await getCurrentAreas()) });
   } catch (error) {
     console.error("Unable to load forecast locations", error);
-    return NextResponse.json({ error: "目前無法讀取預報地區。" }, { status: 503 });
+    return NextResponse.json({ error: "暫時無法取得可用縣市" }, { status: 503 });
   }
 }

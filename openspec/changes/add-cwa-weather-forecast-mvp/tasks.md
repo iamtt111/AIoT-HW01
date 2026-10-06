@@ -20,23 +20,23 @@
 - [x] 3.2 Update defensive parsing and normalization for the current `F-D0047-091` county response shape, including case-compatible structural fields and supported weather elements; verify fixture and authorized live-response tests cover complete, missing, and invalid optional elements.
 - [x] 3.3 Implement sync-run recording, canonical checksum generation, current-forecast replacement, immutable changed-version insertion, and raw-payload retention; verify tests prove duplicate content creates no second version and failed syncs preserve the current forecast.
 - [x] 3.4 Update the scheduled/manual Python command for the county data model and verify it populates a development Supabase project from an authorized CWA response.
-- [ ] 3.5 Add GitHub Actions workflow(s) for manual dispatch and six-hour UTC scheduling after source publication, using GitHub Secrets only; verify the workflow passes in a repository run and its schedule is documented.
+- [x] 3.5 Add GitHub Actions workflow(s) for manual dispatch and six-hour UTC scheduling after source publication, using GitHub Secrets only; verify the workflow passes in a repository run and its schedule is documented.
 
 ## 4. Forecast query boundary
 
-- [ ] 4.1 Implement server-side discovery of available counties and cities; verify tests return each current location once and safely handle no current data.
-- [ ] 4.2 Implement server-side latest-forecast queries with a required county or city and optional date-range filters; verify tests cover matching data, no matches, and valid-period overlap.
+- [x] 4.1 Implement server-side discovery of available counties and cities; verify tests return each current location once and safely handle no current data.
+- [x] 4.2 Implement server-side latest-forecast queries with a required county or city and optional date-range filters; verify tests cover matching data, no matches, and valid-period overlap.
 - [x] 4.3 Implement a data-freshness response derived from sync-run state; verify a failed latest run returns the prior successful update time and stale status.
 - [x] 4.4 Ensure no browser response contains CWA or Supabase write credentials; verify route and build-output checks pass with production environment configuration.
 
 ## 5. Geographic reference data and public dashboard
 
-- [ ] 5.1 Add a versioned Taiwan county GeoJSON reference asset and a normalized-code join strategy; verify a validation script reports unmatched forecast locations.
-- [ ] 5.2 Implement the Traditional Chinese dashboard shell with update status, loading, empty, error, and stale-data states; verify these states render from mocked query responses.
-- [ ] 5.3 Implement county and date/date-range controls; verify component tests cover changing location and time scope.
-- [ ] 5.4 Implement the client-side Leaflet county map, indicator selector, legend, and unavailable-value rendering for temperature, precipitation, UV, and wind; verify an integration test or manual test shows each layer changing with the selected date.
-- [ ] 5.5 Implement the selected-county highest/lowest temperature trend and forecast table; verify a multi-day fixture renders both the chart series and all returned periods.
-- [ ] 5.6 Document dashboard use, map indicator interpretation, and data-freshness limitations in the README; verify the documented local preview matches the deployed behavior.
+- [x] 5.1 Add a versioned Taiwan county GeoJSON reference asset and a normalized-code join strategy; verify a validation script reports unmatched forecast locations.
+- [x] 5.2 Implement the Traditional Chinese dashboard shell with update status, loading, empty, error, and stale-data states; verify these states render from mocked query responses.
+- [x] 5.3 Implement county and date/date-range controls; verify component tests cover changing location and time scope.
+- [x] 5.4 Implement the client-side Leaflet county map, indicator selector, legend, and unavailable-value rendering for temperature, precipitation, UV, and wind; verify an integration test or manual test shows each layer changing with the selected date.
+- [x] 5.5 Implement the selected-county highest/lowest temperature trend and forecast table; verify a multi-day fixture renders both the chart series and all returned periods.
+- [x] 5.6 Document dashboard use, map indicator interpretation, and data-freshness limitations in the README; verify the documented local preview matches the deployed behavior.
 
 ## 6. Protected administrative operations
 
