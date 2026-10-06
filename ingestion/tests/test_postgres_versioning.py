@@ -120,6 +120,23 @@ class PostgresVersionStoreTests(unittest.TestCase):
                 )
                 self.assertEqual(cursor.fetchone()[0], "failed")
 
+    def test_failed_sync_retains_a_fetched_raw_payload(self) -> None:
+        result = self.store.record_failure(
+            DATASET_ID,
+            ValueError("unparseable CWA payload"),
+            raw_payload={"records": {"unexpected": True}},
+            source_url="https://example.test/F-D0047-091",
+        )
+        with psycopg.connect(self.database_url) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "select payload, source_url from public.raw_payloads where sync_run_id = %s::uuid",
+                    (result.run_id,),
+                )
+                payload, source_url = cursor.fetchone()
+        self.assertEqual(payload, {"records": {"unexpected": True}})
+        self.assertEqual(source_url, "https://example.test/F-D0047-091")
+
     def test_new_source_publication_time_creates_a_new_immutable_version(self) -> None:
         self.store.synchronize(
             dataset_id=DATASET_ID,

@@ -76,6 +76,9 @@ def run_sync(args: argparse.Namespace) -> SyncResult:
 
     store = PostgresVersionStore(database_url)
     dataset_id = DEFAULT_DATASET_ID
+    payload: dict[str, Any] | None = None
+    source_url: str | None = None
+    fetched_at: datetime | None = None
     try:
         if args.fixture:
             payload = json.loads(args.fixture.read_text(encoding="utf-8"))
@@ -90,6 +93,7 @@ def run_sync(args: argparse.Namespace) -> SyncResult:
                 fetched = client.fetch()
             payload = fetched.payload
             source_url = fetched.source_url
+            fetched_at = fetched.fetched_at
             source_published_at = None
 
         forecasts = parse_forecasts(payload)
@@ -101,9 +105,16 @@ def run_sync(args: argparse.Namespace) -> SyncResult:
             forecasts=forecasts,
             source_published_at=source_published_at,
             source_url=source_url,
+            fetched_at=fetched_at,
         )
     except Exception as error:
-        return store.record_failure(dataset_id, error)
+        return store.record_failure(
+            dataset_id,
+            error,
+            raw_payload=payload,
+            source_url=source_url,
+            fetched_at=fetched_at,
+        )
 
 
 def main(argv: Sequence[str] | None = None) -> int:

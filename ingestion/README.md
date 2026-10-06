@@ -19,6 +19,10 @@ Place it only in the ignored repository-root `.env` for local work, and store th
 same value as a GitHub Actions secret for scheduled runs. Do not put it in
 `web/.env.local` or any `NEXT_PUBLIC_*` setting.
 
+The writer disables Psycopg prepared statements automatically, which is required
+by Supavisor Transaction pooler. GitHub Actions is IPv4-only, so do not use the
+free-plan Direct connection URI for its `SUPABASE_DB_URL` secret.
+
 ## Run a synchronization
 
 For an actual CWA fetch, set `CWA_API_KEY` and `SUPABASE_DB_URL`, then run:

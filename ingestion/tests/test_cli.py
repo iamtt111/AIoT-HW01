@@ -13,6 +13,7 @@ from cwa_weather_ingestion.versioning import SyncResult
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "fd0047-091-parser-complete.json"
+EMPTY_FIXTURE = Path(__file__).parent / "fixtures" / "fd0047-091-success.json"
 
 
 class CliTests(unittest.TestCase):
@@ -41,6 +42,23 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertTrue(store.record_failure.called)
         self.assertEqual(json.loads(output.getvalue())["status"], "failed")
+
+    @mock.patch("cwa_weather_ingestion.cli.PostgresVersionStore")
+    def test_unparseable_payload_is_retained_with_the_failed_run(self, store_class: mock.Mock) -> None:
+        store = store_class.return_value
+        store.record_failure.return_value = SyncResult("run-3", "failed", False, None, 0, "no periods")
+        output = io.StringIO()
+        with mock.patch("sys.stdout", output):
+            code = cli.main(["--fixture", str(EMPTY_FIXTURE), "--database-url", "postgresql://test"])
+
+        self.assertEqual(code, 1)
+        self.assertEqual(
+            store.record_failure.call_args.kwargs["raw_payload"]["records"]["datasetDescription"],
+            "鄉鎮天氣預報",
+        )
+        self.assertEqual(
+            store.record_failure.call_args.kwargs["source_url"], f"fixture://{EMPTY_FIXTURE.name}"
+        )
 
     @mock.patch("cwa_weather_ingestion.cli._load_local_environment")
     def test_missing_database_url_returns_configuration_error(self, _: mock.Mock) -> None:

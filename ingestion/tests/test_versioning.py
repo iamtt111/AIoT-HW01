@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import unittest
+from unittest import mock
 
 from cwa_weather_ingestion.parser import NormalizedForecast
 from cwa_weather_ingestion.versioning import (
     InMemoryVersionStore,
+    PostgresVersionStore,
     canonical_checksum,
     canonical_forecast_checksum,
 )
@@ -23,6 +25,11 @@ def forecast() -> NormalizedForecast:
 
 
 class VersioningTests(unittest.TestCase):
+    def test_postgres_store_disables_prepared_statements_for_transaction_pooling(self) -> None:
+        with mock.patch("cwa_weather_ingestion.versioning.psycopg.connect") as connect:
+            PostgresVersionStore("postgresql://test")._open_connection()
+        connect.assert_called_once_with("postgresql://test", prepare_threshold=None)
+
     def test_canonical_checksum_ignores_json_key_order(self) -> None:
         self.assertEqual(canonical_checksum({"b": 2, "a": 1}), canonical_checksum({"a": 1, "b": 2}))
 

@@ -112,7 +112,13 @@ class InMemoryVersionStore:
         run.update(status="succeeded", changed=True, record_count=len(forecasts), version_id=version_id)
         return SyncResult(run_id, "succeeded", True, version_id, len(forecasts))
 
-    def record_failure(self, dataset_id: str, error: Exception) -> SyncResult:
+    def record_failure(
+        self,
+        dataset_id: str,
+        error: Exception,
+        *,
+        raw_payload: dict[str, Any] | None = None,
+    ) -> SyncResult:
         """Record a failed run without mutating the last successful projection."""
         run_id = len(self.runs) + 1
         summary = f"{error.__class__.__name__}: {error}"
@@ -125,6 +131,8 @@ class InMemoryVersionStore:
                 "started_at": datetime.now(timezone.utc),
             }
         )
+        if raw_payload is not None:
+            self.raw_payloads[run_id] = raw_payload
         return SyncResult(run_id, "failed", False, None, 0, summary)
 
 
@@ -135,6 +143,10 @@ class PostgresVersionStore:
         if not database_url.strip():
             raise ValueError("database_url must not be empty")
         self.database_url = database_url
+
+    def _open_connection(self) -> psycopg.Connection[Any]:
+        """Open a connection compatible with Supavisor transaction pooling."""
+        return psycopg.connect(self.database_url, prepare_threshold=None)
 
     def synchronize(
         self,
@@ -151,7 +163,7 @@ class PostgresVersionStore:
         raw_checksum = canonical_checksum(raw_payload)
         fetched_at = fetched_at or datetime.now(timezone.utc)
 
-        with psycopg.connect(self.database_url) as connection:
+        with self._open_connection() as connection:
             with connection.cursor() as cursor:
                 cursor.execute(
                     """
@@ -232,10 +244,19 @@ class PostgresVersionStore:
                 cursor.execute("select public.release_forecast_sync_lock(%s::uuid)", (run_id,))
                 return SyncResult(run_id, "succeeded", not unchanged, version_id, len(forecasts))
 
-    def record_failure(self, dataset_id: str, error: Exception) -> SyncResult:
-        """Record an unsuccessful attempt without modifying the current projection."""
+    def record_failure(
+        self,
+        dataset_id: str,
+        error: Exception,
+        *,
+        raw_payload: dict[str, Any] | None = None,
+        source_url: str | None = None,
+        fetched_at: datetime | None = None,
+    ) -> SyncResult:
+        """Record an unsuccessful attempt without mutating current data or losing a response."""
         summary = f"{error.__class__.__name__}: {error}"[:1000]
-        with psycopg.connect(self.database_url) as connection:
+        fetched_at = fetched_at or datetime.now(timezone.utc)
+        with self._open_connection() as connection:
             with connection.cursor() as cursor:
                 cursor.execute(
                     """
@@ -247,6 +268,21 @@ class PostgresVersionStore:
                     (dataset_id, summary),
                 )
                 run_id = str(cursor.fetchone()[0])
+                if raw_payload is not None:
+                    cursor.execute(
+                        """
+                        insert into public.raw_payloads
+                          (sync_run_id, payload, content_checksum, source_url, fetched_at)
+                        values (%s::uuid, %s, %s, %s, %s)
+                        """,
+                        (
+                            run_id,
+                            Jsonb(raw_payload),
+                            canonical_checksum(raw_payload),
+                            source_url,
+                            fetched_at,
+                        ),
+                    )
         return SyncResult(run_id, "failed", False, None, 0, summary)
 
     @staticmethod
