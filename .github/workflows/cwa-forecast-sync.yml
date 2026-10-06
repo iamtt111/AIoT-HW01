@@ -1,0 +1,39 @@
+name: Synchronize CWA forecast
+
+on:
+  schedule:
+    # CWA forecast runs after each six-hour UTC publication window.
+    - cron: '17 0,6,12,18 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cwa-forecast-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Fetch and persist F-D0047-091
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: ingestion/pyproject.toml
+
+      - name: Install ingestion package
+        run: python -m pip install --upgrade pip && python -m pip install ./ingestion
+
+      - name: Synchronize forecast
+        run: python -m cwa_weather_ingestion

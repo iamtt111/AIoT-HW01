@@ -1,0 +1,13 @@
+{
+  "records": {"locations": [{"locationsName": "臺北市", "location": [{
+    "locationName": "中正區", "geocode": "6300100",
+    "weatherElement": [
+      {"elementName": "Wx", "time": [{"startTime": "2026-10-05T00:00:00+08:00", "endTime": "2026-10-05T12:00:00+08:00", "elementValue": [{"value": "多雲"}, {"value": "02"}]}]},
+      {"elementName": "PoP12h", "time": [{"startTime": "2026-10-05T00:00:00+08:00", "endTime": "2026-10-05T12:00:00+08:00", "elementValue": [{"value": "30"}]}]},
+      {"elementName": "MinT", "time": [{"startTime": "2026-10-05T00:00:00+08:00", "endTime": "2026-10-05T12:00:00+08:00", "elementValue": [{"value": "21"}]}]},
+      {"elementName": "MaxT", "time": [{"startTime": "2026-10-05T00:00:00+08:00", "endTime": "2026-10-05T12:00:00+08:00", "elementValue": [{"value": "28"}]}]},
+      {"elementName": "UVI", "time": [{"startTime": "2026-10-05T00:00:00+08:00", "endTime": "2026-10-05T12:00:00+08:00", "elementValue": [{"value": "6"}]}]},
+      {"elementName": "WS", "time": [{"startTime": "2026-10-05T00:00:00+08:00", "endTime": "2026-10-05T12:00:00+08:00", "elementValue": [{"value": "3.5"}]}]}
+    ]
+  }]}]}
+}

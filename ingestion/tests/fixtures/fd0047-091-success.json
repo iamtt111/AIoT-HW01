@@ -1,0 +1,16 @@
+{
+  "success": "true",
+  "result": {
+    "resource_id": "F-D0047-091",
+    "fields": []
+  },
+  "records": {
+    "datasetDescription": "鄉鎮天氣預報",
+    "locations": [
+      {
+        "locationsName": "臺北市",
+        "location": []
+      }
+    ]
+  }
+}
