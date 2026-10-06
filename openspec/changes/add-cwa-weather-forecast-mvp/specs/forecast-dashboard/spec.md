@@ -2,44 +2,44 @@
 
 ## Purpose
 
-此能力提供繁體中文的台灣一週預報網站，讓一般使用者以地圖、縣市、鄉鎮及日期探索未來天氣資料。
+定義以繁體中文呈現 CWA 縣市預報的互動式公開儀表板，讓使用者能選擇縣市與時間範圍並理解預報值與資料狀態。
 
 ## ADDED Requirements
 
-### Requirement: Taiwanese Chinese forecast dashboard
-The public dashboard SHALL present labels, messages, dates, and weather information in Traditional Chinese and SHALL display the latest forecast data update status.
+### Requirement: Traditional Chinese county forecast dashboard
+The public dashboard SHALL present labels, messages, dates, weather information, and the latest forecast update status in Traditional Chinese.
 
 #### Scenario: User opens the dashboard
 - **WHEN** the dashboard loads successfully
 - **THEN** it displays a Traditional Chinese title and the timestamp or state of the latest forecast data
 
-### Requirement: Location and date selection
-The dashboard SHALL allow a user to choose a county, then a town within that county, and to choose a forecast date or date range. Changing a county MUST reset any town selection that does not belong to the new county.
+### Requirement: County and date selection
+The dashboard SHALL allow a user to choose an available county or city and a forecast date or date range.
 
-#### Scenario: County is changed
-- **WHEN** a user selects a different county
-- **THEN** the town control displays only towns in the selected county and removes an incompatible prior town selection
+#### Scenario: County is selected
+- **WHEN** a user selects an available county or city
+- **THEN** the dashboard requests and displays forecast data only for that location
 
-#### Scenario: User selects a town and date
-- **WHEN** a user selects an available town and forecast date
-- **THEN** the dashboard displays forecast data for that location and date
+#### Scenario: User changes the forecast date scope
+- **WHEN** a user selects an available forecast date or date range
+- **THEN** the dashboard refreshes the displayed records to the selected time scope
 
-### Requirement: Interactive forecast map
-The dashboard SHALL render an interactive Taiwan map with a selectable forecast indicator layer. It SHALL support at least temperature, precipitation probability, ultraviolet index, and wind indicator selections when data is available.
+### Requirement: Interactive county forecast map
+The dashboard SHALL render an interactive Taiwan county map with a selectable forecast indicator layer. It SHALL support at least temperature, precipitation probability, ultraviolet index, and wind indicator selections when data is available.
 
 #### Scenario: User switches the displayed forecast indicator
 - **WHEN** a user selects an available forecast indicator
-- **THEN** the map updates its visual encoding and legend to identify the selected indicator and its values
+- **THEN** the map updates its county visual encoding and legend to identify the selected indicator and its values
 
 #### Scenario: Map data is unavailable for an indicator
-- **WHEN** the selected indicator is unavailable for a location or date
+- **WHEN** the selected indicator is unavailable for a county or date
 - **THEN** the dashboard marks it as unavailable rather than showing an invented value
 
 ### Requirement: Forecast detail visualization
-The dashboard SHALL show a highest and lowest temperature trend and a tabular forecast detail for the selected location and date scope.
+The dashboard SHALL show a highest and lowest temperature trend and a tabular forecast detail for the selected county or city and date scope.
 
-#### Scenario: Multi-day town forecast is selected
-- **WHEN** forecast data exists for a selected town across multiple days
+#### Scenario: Multi-day county forecast is selected
+- **WHEN** forecast data exists for a selected county or city across multiple days
 - **THEN** the dashboard displays a highest/lowest temperature trend and a table of the returned periods
 
 ### Requirement: User-visible unavailable and stale states
@@ -48,4 +48,3 @@ The dashboard SHALL display a comprehensible Traditional Chinese loading, empty,
 #### Scenario: Sync status is stale
 - **WHEN** the data query reports that the latest sync failed after a prior success
 - **THEN** the dashboard shows the last successful update time and identifies the data as stale
-

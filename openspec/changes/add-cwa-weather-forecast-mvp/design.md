@@ -2,86 +2,64 @@
 
 ## Context
 
-The repository contains requirements and an older observation-focused Windy/FastAPI design, but no application code or existing OpenSpec capabilities. This change follows the confirmed `requirement-list.md` MVP: CWA `F-D0047-091` weekly town forecasts, six-hour updates, Supabase PostgreSQL, and a Vercel-hosted Leaflet dashboard. See `proposal.md` for motivation and the capability specs for behavior contracts.
+已確認的 MVP 資料來源為 CWA `F-D0047-091`。其目前實際回應是縣市層級位置與預報元素，而非可用於鄉鎮選擇的完整鄉鎮資料；因此本設計以來源實際可驗證的縣市資料為邊界。動機與功能範圍見 `proposal.md`。
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Build one reliable forecast pipeline that preserves the last successful data set and records source versions.
-- Keep the CWA credential and database write credential outside browser-delivered code.
-- Provide a Vercel-friendly, Traditional Chinese dashboard with town-level forecast exploration.
-- Make scheduled and manual synchronization idempotent and observable.
+- 建立可重複執行的縣市預報同步，保留最近一次成功資料與每次同步結果。
+- 將來源位置正規化為穩定的縣市代碼與名稱，供資料庫、查詢 API 與地圖使用。
+- 在不將 CWA 或資料庫寫入憑證傳送到瀏覽器的前提下，提供繁體中文縣市預報探索介面。
+- 支援可觀察、可手動重試且不重複建立版本的排程同步。
 
 **Non-Goals:**
 
-- Ingesting `O-A0003-001`, showing live station markers, or supporting a 30-minute observation scheduler.
-- Using Windy, Folium, FastAPI, Redis, local SQLite, or an always-running backend service.
-- Supporting end-user accounts, saved locations, or a public data-write API.
-- Supplying sunrise/sunset, long-term historical playback, or forecasts beyond the source's available week.
+- 鄉鎮選擇、鄉鎮地圖邊界或以鄉鎮為單位的預報資料。
+- `O-A0003-001` 觀測資料、測站標記與三十分鐘觀測排程。
+- Windy、Folium、FastAPI、Redis、SQLite 或常駐後端服務。
+- 一般使用者帳號、收藏地點、日出／日落與公開資料寫入 API。
 
 ## Decisions
 
-### 1. Use GitHub Actions plus Python for ingestion and Supabase PostgreSQL for persistence
+### 1. Use GitHub Actions, Python, and Supabase PostgreSQL for county forecast ingestion
 
-The scheduled workflow runs a Python command every six hours, shortly after the documented CWA publication windows. It obtains the CWA key from GitHub Actions Secrets and writes through a server-side Supabase/PostgreSQL connection. The Vercel deployment never runs a persistent scheduler.
+The scheduled workflow runs a Python command every six hours after the CWA publication window and supports manual dispatch. The CWA API key exists only in GitHub Actions Secrets; the ingestion program writes through a server-side Supabase/PostgreSQL connection. Vercel does not run a persistent scheduler.
 
-This preserves the course requirement for modular Python data processing and avoids relying on Vercel's ephemeral filesystem. A dedicated FastAPI service was considered, but it adds a separately hosted, always-on backend without adding MVP behavior. Vercel Cron was not selected because the project must avoid an extra paid dependency.
+This matches the course Python data-processing requirement and avoids depending on Vercel's ephemeral filesystem or paid Cron capability. The schedule uses UTC and a non-zero minute offset to reduce the chance of retrieving stale source data.
 
-The workflow SHALL use a non-zero minute offset and UTC cron schedule so it fetches after CWA publishes. It SHALL also support a manually dispatched run for diagnosis.
+### 2. Represent source locations as counties or cities, never fabricated townships
 
-### 2. Store canonical current rows, immutable versions, and raw responses separately
+The synchronizer reads the source `Geocode` and `LocationName` and uses the stable county or city code as the location identity. Database locations, historical versions, current projections, and query results all use this county-level identity. The system MUST NOT copy a county name into a fabricated township field to satisfy an older schema.
 
-The database uses a normalized model:
+If the existing schema has separate county and township columns, a forward-only migration will replace it with an unambiguous county location representation. No successful production forecast data exists yet, so development data can be safely converted or cleared by the migration.
 
-- `locations`: stable county/town identifiers and display names; optional map geometry key or centroid.
-- `sync_runs`: attempt time, source identifier, source issue/update time, checksum, outcome, and error summary.
-- `forecast_versions`: one successful changed source version, linked to its sync run.
-- `forecast_records`: immutable normalized records belonging to a version, keyed by location and valid period.
-- `current_forecasts`: a current projection or table updated atomically from the latest version for fast public reads.
-- `raw_payloads`: protected raw source bodies and metadata, linked to sync runs.
+### 3. Separate current data, immutable versions, and raw source responses
 
-The source publication/update value is preferred for change detection; a canonicalized-content checksum is the fallback. A successful duplicate updates `sync_runs` but creates neither a `forecast_versions` nor `forecast_records` duplicate. A failed run leaves `current_forecasts` untouched.
+The database retains `locations`, `sync_runs`, `forecast_versions`, `forecast_records`, `current_forecasts`, and protected `raw_payloads`. Source update time is preferred for version detection; a canonical normalized-content checksum is the fallback. A successful duplicate adds only a sync record. A failed sync does not change the current forecast but retains an already received raw response for protected diagnosis.
 
-Using only raw JSON would couple the website to CWA's nested format. Using only a mutable current table would lose the required historical versions. The dual representation serves both needs.
+### 4. Make Next.js/Vercel the query boundary and Leaflet the county-map renderer
 
-### 3. Make Next.js/Vercel the web and query boundary
+Next.js server-side code reads normalized forecasts and returns counties, forecasts, and freshness data. Browsers receive neither CWA credentials nor Supabase write credentials. Leaflet loads versioned Taiwan county GeoJSON and joins forecast locations by official administrative code. A user can select a county, date or date range, and temperature, precipitation probability, ultraviolet, or wind layers.
 
-The Vercel application uses Next.js with server-side routes or server components as the forecast query boundary. Browser clients receive normalized forecast, location, and freshness data only; no browser bundle receives CWA or Supabase service credentials.
-
-The query surface has three logical resources:
-
-- location discovery: counties and towns constrained by the chosen county;
-- forecast data: county/town plus optional date range;
-- freshness: last successful update and latest sync state.
-
-Server-side query code uses a least-privilege read credential where possible. Direct public table access was considered but rejected for the MVP because it complicates raw-payload isolation and allows the browser to depend on database schema.
-
-### 4. Use Leaflet with versioned Taiwan geographic reference data
-
-The frontend renders Leaflet on the client and joins normalized locations to a versioned Taiwan county/town GeoJSON asset by stable administrative code rather than display text. For a selected forecast date and indicator, it colors the matching town features and derives the legend from the same indicator scale. Missing values remain visibly unavailable.
-
-Leaflet was selected because it supports custom data layers and works naturally in a Vercel React application. Windy would introduce another API key and a separate model-data visual language; Folium produces a Python-rendered map that is less suitable for client-side filter changes.
+Missing data remains visibly unavailable. Township GeoJSON and township controls are not MVP scope.
 
 ### 5. Use one shared administrator secret with a server-side session for the MVP
 
-The administrative route presents a password challenge verified only on the server against a Vercel environment secret. A successful verification issues a short-lived, signed, HttpOnly, Secure session cookie. Admin-only server routes require that session before exposing raw payloads or accepting a manual synchronization request.
-
-This is intentionally not a multi-user identity system. The manual action calls the same protected workflow trigger or server-side sync mechanism used by operations, and synchronization ownership is protected by a database-backed lock or unique active-run state. A public client can never initiate a write using the CWA key.
+An administrative route verifies a password only on the server against a Vercel environment secret. A successful verification issues a short-lived, signed, HttpOnly, Secure session cookie. Protected routes may inspect raw payloads or initiate manual synchronization; public clients cannot trigger writes or access write credentials.
 
 ## Risks / Trade-offs
 
-- [GitHub scheduled runs can be delayed or skipped] → Schedule after source publication, make sync idempotent, retain last successful data, record every attempt, and offer authenticated manual retry.
-- [CWA field availability or shape varies by period] → Parse elements defensively, preserve valid records with unavailable optional values, validate against saved fixture payloads, and log rejected values.
-- [Town labels may not exactly match map labels] → Join by normalized official administrative identifiers, include a validation report for unmatched locations, and avoid display-name-only joins.
-- [Forecast source can update without a reliable timestamp] → Use canonical content checksums as change-detection fallback.
-- [Free Supabase project availability and size are limited] → Store raw payloads with bounded retention, keep one current projection, monitor version growth, and document recovery/re-sync steps.
-- [A shared administrator password has limited auditability] → Limit the route to trusted operators, use a strong secret, short session lifetime, and defer user-level audit requirements to a future change.
+- [CWA field names or weather-element shapes change] → Use case-compatible defensive parsing, retain raw payloads, and test against fixtures plus an authorized live response.
+- [Free GitHub schedules are delayed] → Keep sync idempotent, retain the last successful forecast, and offer authenticated manual retry.
+- [County names and map labels differ] → Join only with official administrative codes and report unmatched locations through validation.
+- [Free Supabase projects have size limits] → Retain one current projection and bounded raw/history data, with documented re-sync procedures.
+- [A shared administrator password has limited auditability] → Limit access to trusted operators, use a strong secret and short session; defer individual accounts to a future change.
 
 ## Migration Plan
 
-1. Provision Supabase schema, row-access policy, and required environment secrets before deploying any public route.
-2. Deploy the Python sync workflow with a manual dispatch path; perform an initial synchronization and validate records, location joins, and duplicate detection.
-3. Deploy Vercel query routes and dashboard against the populated schema; verify public reads, stale-state behavior, and unsupported-data rendering.
-4. Configure the six-hour GitHub Actions schedule and protected admin credentials; monitor initial scheduled runs.
-5. Roll back a web deployment by reverting Vercel to the previous deployment. If ingestion is faulty, disable the workflow or admin trigger, retain the prior `current_forecasts`, correct the parser, and re-run synchronization. No destructive migration is required for rollback because forecast versions are append-only.
+1. Apply a county-location schema migration and verify development data can be safely converted or cleared.
+2. Update the parser and tests using a retained `F-D0047-091` response, then complete one development Supabase sync.
+3. Run the GitHub Actions workflow manually and verify successful data plus failed-run raw payload retention.
+4. Deploy the query API, county GeoJSON, and public dashboard; verify county selection, layers, table, and stale state.
+5. If ingestion becomes faulty, disable the workflow or admin trigger, retain the prior `current_forecasts`, correct the parser, and re-run synchronization. Version history avoids destructive rollback.
