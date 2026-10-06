@@ -4,6 +4,9 @@
 !.env.example
 !*/.env.example
 
+# Raw geographic source data; commit only the processed web asset.
+/local-data/
+
 # Python
 .venv/
 venv/

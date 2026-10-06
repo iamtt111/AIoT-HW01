@@ -2,7 +2,14 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const staticDirectory = join(process.cwd(), ".next", "static");
-const secretNames = ["CWA_API_KEY", "SUPABASE_SECRET_KEY", "SUPABASE_DB_URL"];
+const secretNames = [
+  "ADMIN_PASSWORD",
+  "ADMIN_SESSION_SECRET",
+  "CWA_API_KEY",
+  "GITHUB_ACTIONS_SYNC_TOKEN",
+  "SUPABASE_SECRET_KEY",
+  "SUPABASE_DB_URL",
+];
 
 function filesUnder(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {

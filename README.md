@@ -8,6 +8,46 @@
 
 [https://aiot-hw01.vercel.app/](https://aiot-hw01.vercel.app/)
 
+## 管理員操作
+
+管理頁位於 `/admin`，不會在首頁顯示。登入成功後，伺服器會建立 **30 分鐘、HttpOnly、Secure、SameSite=Strict** 的簽章 session cookie；密碼與 session secret 都不會傳回瀏覽器。
+
+### 1. 設定 Vercel 環境變數
+
+在 Vercel 的 **Preview** 與 **Production** 都設定既有的 `SUPABASE_URL`、`SUPABASE_SECRET_KEY`，並新增：
+
+```env
+ADMIN_PASSWORD=<長且唯一的管理密碼>
+ADMIN_SESSION_SECRET=<至少 32 字元的隨機字串>
+GITHUB_ACTIONS_SYNC_TOKEN=<fine-grained GitHub token>
+GITHUB_REPOSITORY=<owner>/<repository>
+GITHUB_SYNC_REF=main
+```
+
+`GITHUB_ACTIONS_SYNC_TOKEN` 應建立為僅限此 repository 的 fine-grained token，並只授予 **Actions: Read and write**。它只用於由 `/api/admin/sync` 觸發既有的 `cwa-forecast-sync.yml`，CWA API key 與 `SUPABASE_DB_URL` 仍只保留在 GitHub Actions Secrets。
+
+### 2. 手動同步與原始回應
+
+部署後開啟 `<網站網址>/admin`：
+
+- **執行手動同步**：先查詢是否已有執行中的同步；沒有才向 GitHub Actions 建立 workflow dispatch。畫面顯示「已交給 GitHub Actions」代表 dispatch 成功接受，實際資料結果請在 Actions run 或首頁資料狀態確認。
+- **顯示最新原始回應**：僅登入後可取得，回應包含 sync metadata 與保留 JSON。任何含有 authorization、token、secret、password 或 configured secret 值的內容都會以 `[REDACTED]` 取代。
+- 若 API 回傳 `409`，代表已有同步在執行，等待既有 run 結束後再試；若 dispatch 失敗，請檢查 GitHub token 是否過期、repository 名稱與 workflow 是否仍存在。
+
+若需要撤銷管理存取，請先在 Vercel 旋轉 `ADMIN_PASSWORD`、`ADMIN_SESSION_SECRET` 或 GitHub token，再重新部署；舊 session 會立即失效。若 CWA 同步失敗，系統仍保留上一個成功版本供公開儀表板讀取，可在 Actions 修正設定後重新執行 workflow。
+
+### 3. 本機 production 模式驗證
+
+先複製 `web/.env.example` 為忽略的 `web/.env.local`，填入上列變數，然後執行：
+
+```powershell
+cd web
+npm.cmd run build
+npm.cmd run start
+```
+
+開啟 `http://localhost:3000/admin` 測試登入與登出。若瀏覽器不接受 localhost 的 Secure cookie，請改用 Vercel Preview URL 驗證。不要把 `CWA_API_KEY` 或 `SUPABASE_DB_URL` 放入 `web/.env.local` 或 Vercel。
+
 ## 主要功能
 
 - 依縣市及日期／日期範圍查詢 CWA 預報。
@@ -93,6 +133,13 @@ npx.cmd supabase@latest db push --dry-run
 npx.cmd supabase@latest db push
 npx.cmd supabase@latest migration list
 ```
+
+### Migration 與同步復原原則
+
+- 已套用到遠端的 migration 不要修改或刪除；若 schema 需要修正，新增一個**前向 migration** 後先執行 `db push --dry-run`。
+- `supabase db reset` 僅適用於本機 Docker 開發資料庫，絕不可用於雲端 Supabase 專案。
+- 同步失敗時，`current_forecasts` 會保留上一個成功版本。先查看 GitHub Actions log 或管理頁的受保護 raw payload，再修正 CWA／資料庫設定並重新執行 **Synchronize CWA forecast**；不需要刪除既有預報資料。
+- 若需暫停更新，先在 GitHub Actions 停用 workflow 或停止管理頁手動觸發，確認問題排除後再重新啟用並執行一次同步。
 
 ### 3. 手動執行同步程式
 

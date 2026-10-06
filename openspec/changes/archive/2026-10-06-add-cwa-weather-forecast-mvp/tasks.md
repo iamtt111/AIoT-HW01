@@ -11,7 +11,7 @@
 - [x] 2.1 Create the Supabase migration for locations, sync runs, forecast versions, immutable forecast records, current forecasts, and protected raw payloads; verify it applies to a clean database.
 - [x] 2.2 Add database constraints, indexes, and a synchronization lock that enforce location/valid-time uniqueness and prevent concurrent active synchronizations; verify duplicate and concurrent-write cases in database tests.
 - [x] 2.3 Configure least-privilege read and administrative access policies so public queries cannot read raw payloads or write forecast data; verify allowed and denied access with separate credentials.
-- [ ] 2.4 Document schema setup, migration execution, and safe rollback/re-sync procedures in the README; verify each documented setup command against a clean local environment.
+- [x] 2.4 Document schema setup, migration execution, and safe rollback/re-sync procedures in the README; verify each documented setup command against a clean local environment.
 - [x] 2.5 Add a forward-only migration that represents `F-D0047-091` locations as counties or cities without fabricated township identities; verify database constraints and migration tests pass.
 
 ## 3. CWA county forecast ingestion and versioning
@@ -40,13 +40,13 @@
 
 ## 6. Protected administrative operations
 
-- [ ] 6.1 Implement server-side admin password verification and short-lived signed HttpOnly session handling; verify unauthenticated requests cannot access protected routes and authenticated requests can.
-- [ ] 6.2 Implement protected raw-payload inspection that returns fetch metadata without credentials; verify a public request is denied and an admin response contains no secret value.
-- [ ] 6.3 Implement protected manual synchronization with active-run rejection and result reporting; verify tests cover idle success, upstream failure, and an already-running synchronization.
-- [ ] 6.4 Document administrator secret setup, manual synchronization, and recovery steps; verify the documented procedure works in a Vercel preview or equivalent local production-mode run.
+- [x] 6.1 Implement server-side admin password verification and short-lived signed HttpOnly session handling; verify unauthenticated requests cannot access protected routes and authenticated requests can.
+- [x] 6.2 Implement protected raw-payload inspection that returns fetch metadata without credentials; verify a public request is denied and an admin response contains no secret value.
+- [x] 6.3 Implement protected manual synchronization with active-run rejection and result reporting; verify tests cover idle success, upstream failure, and an already-running synchronization.
+- [x] 6.4 Document administrator secret setup, manual synchronization, and recovery steps; verify the documented procedure works in a Vercel preview or equivalent local production-mode run.
 
 ## 7. End-to-end verification and deployment readiness
 
-- [ ] 7.1 Run the full Python test suite, frontend lint/type-check/test suite, and production build; verify all commands pass from a clean checkout.
-- [ ] 7.2 Perform an end-to-end acceptance check using a populated Supabase project: public county/date selection, map indicators, trend/table, fresh and stale status, and admin protection; record the results in project documentation.
-- [ ] 7.3 Configure Vercel preview/production environment variables and verify deployment exposes only public read behavior while GitHub Actions continues using separate write credentials.
+- [x] 7.1 Run the full Python test suite, frontend lint/type-check/test suite, and production build; verify all commands pass from a clean checkout.
+- [x] 7.2 Perform an end-to-end acceptance check using a populated Supabase project: public county/date selection, map indicators, trend/table, fresh and stale status, and admin protection; record the results in project documentation.
+- [x] 7.3 Configure Vercel preview/production environment variables and verify deployment exposes only public read behavior while GitHub Actions continues using separate write credentials.

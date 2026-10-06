@@ -1,0 +1,82 @@
+{
+  "records": {
+    "Locations": [
+      {
+        "Location": [
+          {
+            "LocationName": "臺北市",
+            "Geocode": "63000000",
+            "WeatherElement": [
+              { "ElementName": "WeatherDescription", "Time": [
+                { "StartTime": "2026-10-06T00:00:00+08:00", "EndTime": "2026-10-06T12:00:00+08:00", "ElementValue": [{ "WeatherDescription": "晴時多雲", "WeatherCode": "02" }] },
+                { "StartTime": "2026-10-07T00:00:00+08:00", "EndTime": "2026-10-07T12:00:00+08:00", "ElementValue": [{ "WeatherDescription": "多雲", "WeatherCode": "03" }] },
+                { "StartTime": "2026-10-08T00:00:00+08:00", "EndTime": "2026-10-08T12:00:00+08:00", "ElementValue": [{ "WeatherDescription": "短暫雨", "WeatherCode": "08" }] }
+              ] },
+              { "ElementName": "PoP", "Time": [
+                { "StartTime": "2026-10-06T00:00:00+08:00", "EndTime": "2026-10-06T12:00:00+08:00", "ElementValue": [{ "ProbabilityOfPrecipitation": "10" }] },
+                { "StartTime": "2026-10-07T00:00:00+08:00", "EndTime": "2026-10-07T12:00:00+08:00", "ElementValue": [{ "ProbabilityOfPrecipitation": "30" }] },
+                { "StartTime": "2026-10-08T00:00:00+08:00", "EndTime": "2026-10-08T12:00:00+08:00", "ElementValue": [{ "ProbabilityOfPrecipitation": "70" }] }
+              ] },
+              { "ElementName": "MinT", "Time": [
+                { "StartTime": "2026-10-06T00:00:00+08:00", "EndTime": "2026-10-06T12:00:00+08:00", "ElementValue": [{ "MinTemperature": "23" }] },
+                { "StartTime": "2026-10-07T00:00:00+08:00", "EndTime": "2026-10-07T12:00:00+08:00", "ElementValue": [{ "MinTemperature": "22" }] },
+                { "StartTime": "2026-10-08T00:00:00+08:00", "EndTime": "2026-10-08T12:00:00+08:00", "ElementValue": [{ "MinTemperature": "21" }] }
+              ] },
+              { "ElementName": "MaxT", "Time": [
+                { "StartTime": "2026-10-06T00:00:00+08:00", "EndTime": "2026-10-06T12:00:00+08:00", "ElementValue": [{ "MaxTemperature": "31" }] },
+                { "StartTime": "2026-10-07T00:00:00+08:00", "EndTime": "2026-10-07T12:00:00+08:00", "ElementValue": [{ "MaxTemperature": "29" }] },
+                { "StartTime": "2026-10-08T00:00:00+08:00", "EndTime": "2026-10-08T12:00:00+08:00", "ElementValue": [{ "MaxTemperature": "27" }] }
+              ] },
+              { "ElementName": "UVI", "Time": [
+                { "StartTime": "2026-10-06T00:00:00+08:00", "EndTime": "2026-10-06T12:00:00+08:00", "ElementValue": [{ "UVIndex": "8" }] },
+                { "StartTime": "2026-10-07T00:00:00+08:00", "EndTime": "2026-10-07T12:00:00+08:00", "ElementValue": [{ "UVIndex": "6" }] },
+                { "StartTime": "2026-10-08T00:00:00+08:00", "EndTime": "2026-10-08T12:00:00+08:00", "ElementValue": [{ "UVIndex": "4" }] }
+              ] },
+              { "ElementName": "WS", "Time": [
+                { "StartTime": "2026-10-06T00:00:00+08:00", "EndTime": "2026-10-06T12:00:00+08:00", "ElementValue": [{ "WindSpeed": "2.5" }] },
+                { "StartTime": "2026-10-07T00:00:00+08:00", "EndTime": "2026-10-07T12:00:00+08:00", "ElementValue": [{ "WindSpeed": "4.0" }] },
+                { "StartTime": "2026-10-08T00:00:00+08:00", "EndTime": "2026-10-08T12:00:00+08:00", "ElementValue": [{ "WindSpeed": "6.0" }] }
+              ] }
+            ]
+          },
+          {
+            "LocationName": "臺中市",
+            "Geocode": "66000000",
+            "WeatherElement": [
+              { "ElementName": "WeatherDescription", "Time": [
+                { "StartTime": "2026-10-06T00:00:00+08:00", "EndTime": "2026-10-06T12:00:00+08:00", "ElementValue": [{ "WeatherDescription": "晴", "WeatherCode": "01" }] },
+                { "StartTime": "2026-10-07T00:00:00+08:00", "EndTime": "2026-10-07T12:00:00+08:00", "ElementValue": [{ "WeatherDescription": "多雲時晴", "WeatherCode": "02" }] },
+                { "StartTime": "2026-10-08T00:00:00+08:00", "EndTime": "2026-10-08T12:00:00+08:00", "ElementValue": [{ "WeatherDescription": "多雲", "WeatherCode": "03" }] }
+              ] },
+              { "ElementName": "PoP", "Time": [
+                { "StartTime": "2026-10-06T00:00:00+08:00", "EndTime": "2026-10-06T12:00:00+08:00", "ElementValue": [{ "ProbabilityOfPrecipitation": "5" }] },
+                { "StartTime": "2026-10-07T00:00:00+08:00", "EndTime": "2026-10-07T12:00:00+08:00", "ElementValue": [{ "ProbabilityOfPrecipitation": "20" }] },
+                { "StartTime": "2026-10-08T00:00:00+08:00", "EndTime": "2026-10-08T12:00:00+08:00", "ElementValue": [{ "ProbabilityOfPrecipitation": "40" }] }
+              ] },
+              { "ElementName": "MinT", "Time": [
+                { "StartTime": "2026-10-06T00:00:00+08:00", "EndTime": "2026-10-06T12:00:00+08:00", "ElementValue": [{ "MinTemperature": "22" }] },
+                { "StartTime": "2026-10-07T00:00:00+08:00", "EndTime": "2026-10-07T12:00:00+08:00", "ElementValue": [{ "MinTemperature": "21" }] },
+                { "StartTime": "2026-10-08T00:00:00+08:00", "EndTime": "2026-10-08T12:00:00+08:00", "ElementValue": [{ "MinTemperature": "20" }] }
+              ] },
+              { "ElementName": "MaxT", "Time": [
+                { "StartTime": "2026-10-06T00:00:00+08:00", "EndTime": "2026-10-06T12:00:00+08:00", "ElementValue": [{ "MaxTemperature": "32" }] },
+                { "StartTime": "2026-10-07T00:00:00+08:00", "EndTime": "2026-10-07T12:00:00+08:00", "ElementValue": [{ "MaxTemperature": "30" }] },
+                { "StartTime": "2026-10-08T00:00:00+08:00", "EndTime": "2026-10-08T12:00:00+08:00", "ElementValue": [{ "MaxTemperature": "28" }] }
+              ] },
+              { "ElementName": "UVI", "Time": [
+                { "StartTime": "2026-10-06T00:00:00+08:00", "EndTime": "2026-10-06T12:00:00+08:00", "ElementValue": [{ "UVIndex": "9" }] },
+                { "StartTime": "2026-10-07T00:00:00+08:00", "EndTime": "2026-10-07T12:00:00+08:00", "ElementValue": [{ "UVIndex": "7" }] },
+                { "StartTime": "2026-10-08T00:00:00+08:00", "EndTime": "2026-10-08T12:00:00+08:00", "ElementValue": [{ "UVIndex": "5" }] }
+              ] },
+              { "ElementName": "WS", "Time": [
+                { "StartTime": "2026-10-06T00:00:00+08:00", "EndTime": "2026-10-06T12:00:00+08:00", "ElementValue": [{ "WindSpeed": "1.5" }] },
+                { "StartTime": "2026-10-07T00:00:00+08:00", "EndTime": "2026-10-07T12:00:00+08:00", "ElementValue": [{ "WindSpeed": "3.0" }] },
+                { "StartTime": "2026-10-08T00:00:00+08:00", "EndTime": "2026-10-08T12:00:00+08:00", "ElementValue": [{ "WindSpeed": "5.0" }] }
+              ] }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
