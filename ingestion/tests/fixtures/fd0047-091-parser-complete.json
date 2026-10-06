@@ -1,13 +1,75 @@
 {
-  "records": {"locations": [{"locationsName": "臺北市", "location": [{
-    "locationName": "中正區", "geocode": "6300100",
-    "weatherElement": [
-      {"elementName": "Wx", "time": [{"startTime": "2026-10-05T00:00:00+08:00", "endTime": "2026-10-05T12:00:00+08:00", "elementValue": [{"value": "多雲"}, {"value": "02"}]}]},
-      {"elementName": "PoP12h", "time": [{"startTime": "2026-10-05T00:00:00+08:00", "endTime": "2026-10-05T12:00:00+08:00", "elementValue": [{"value": "30"}]}]},
-      {"elementName": "MinT", "time": [{"startTime": "2026-10-05T00:00:00+08:00", "endTime": "2026-10-05T12:00:00+08:00", "elementValue": [{"value": "21"}]}]},
-      {"elementName": "MaxT", "time": [{"startTime": "2026-10-05T00:00:00+08:00", "endTime": "2026-10-05T12:00:00+08:00", "elementValue": [{"value": "28"}]}]},
-      {"elementName": "UVI", "time": [{"startTime": "2026-10-05T00:00:00+08:00", "endTime": "2026-10-05T12:00:00+08:00", "elementValue": [{"value": "6"}]}]},
-      {"elementName": "WS", "time": [{"startTime": "2026-10-05T00:00:00+08:00", "endTime": "2026-10-05T12:00:00+08:00", "elementValue": [{"value": "3.5"}]}]}
+  "success": "true",
+  "records": {
+    "Locations": [
+      {
+        "Dataid": "F-D0047-091",
+        "LocationsName": "全臺灣",
+        "Location": [
+          {
+            "LocationName": "臺北市",
+            "Geocode": "6300000",
+            "WeatherElement": [
+              {
+                "ElementName": "天氣現象",
+                "Time": [{
+                  "StartTime": "2026-10-05T00:00:00+08:00",
+                  "EndTime": "2026-10-05T12:00:00+08:00",
+                  "ElementValue": [{"Weather": "多雲", "WeatherCode": "02"}]
+                }]
+              },
+              {
+                "ElementName": "12小時降雨機率",
+                "Time": [{
+                  "StartTime": "2026-10-05T00:00:00+08:00",
+                  "EndTime": "2026-10-05T12:00:00+08:00",
+                  "ElementValue": [{"ProbabilityOfPrecipitation": "30"}]
+                }]
+              },
+              {
+                "ElementName": "最低溫度",
+                "Time": [{
+                  "StartTime": "2026-10-05T00:00:00+08:00",
+                  "EndTime": "2026-10-05T12:00:00+08:00",
+                  "ElementValue": [{"MinTemperature": "21"}]
+                }]
+              },
+              {
+                "ElementName": "最高溫度",
+                "Time": [{
+                  "StartTime": "2026-10-05T00:00:00+08:00",
+                  "EndTime": "2026-10-05T12:00:00+08:00",
+                  "ElementValue": [{"MaxTemperature": "28"}]
+                }]
+              },
+              {
+                "ElementName": "紫外線指數",
+                "Time": [{
+                  "StartTime": "2026-10-05T00:00:00+08:00",
+                  "EndTime": "2026-10-05T12:00:00+08:00",
+                  "ElementValue": [{"UVIndex": "6"}]
+                }]
+              },
+              {
+                "ElementName": "風速",
+                "Time": [{
+                  "StartTime": "2026-10-05T00:00:00+08:00",
+                  "EndTime": "2026-10-05T12:00:00+08:00",
+                  "ElementValue": [{"WindSpeed": "3.5", "BeaufortScale": "3"}]
+                }]
+              },
+              {
+                "ElementName": "風向",
+                "Time": [{
+                  "StartTime": "2026-10-05T00:00:00+08:00",
+                  "EndTime": "2026-10-05T12:00:00+08:00",
+                  "ElementValue": [{"WindDirection": "偏東風"}]
+                }]
+              }
+            ]
+          }
+        ]
+      }
     ]
-  }]}]}
+  }
 }

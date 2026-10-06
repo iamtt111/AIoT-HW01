@@ -22,7 +22,7 @@ def build_parser() -> argparse.ArgumentParser:
     """Create the command-line interface for a single idempotent sync run."""
     parser = argparse.ArgumentParser(
         prog="cwa-weather-sync",
-        description="Fetch and persist the CWA F-D0047-091 township forecast.",
+        description="Fetch and persist the CWA F-D0047-091 county forecast.",
     )
     parser.add_argument(
         "--fixture",

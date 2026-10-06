@@ -17,7 +17,7 @@ DATASET_ID = "test-db-versioning"
 
 def forecast() -> NormalizedForecast:
     return NormalizedForecast(
-        "Test County", "999", "Test Town", "999001",
+        "Test County", "999",
         datetime(2026, 10, 5, tzinfo=timezone.utc),
         datetime(2026, 10, 5, 12, tzinfo=timezone.utc),
         weather_description="Clear", max_temperature_c=28,
@@ -68,9 +68,7 @@ class PostgresVersionStoreTests(unittest.TestCase):
                     "delete from public.forecast_versions where source_dataset_id = %s", (DATASET_ID,)
                 )
                 cursor.execute("delete from public.sync_runs where source_dataset_id = %s", (DATASET_ID,))
-                cursor.execute(
-                    "delete from public.locations where county_code = '999' and town_code = '999001'"
-                )
+                cursor.execute("delete from public.locations where area_code = '999'")
 
     def test_duplicate_content_retains_raw_payload_but_not_a_second_version(self) -> None:
         first = self.store.synchronize(

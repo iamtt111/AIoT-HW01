@@ -12,14 +12,14 @@
 - [x] 2.2 Add database constraints, indexes, and a synchronization lock that enforce location/valid-time uniqueness and prevent concurrent active synchronizations; verify duplicate and concurrent-write cases in database tests.
 - [x] 2.3 Configure least-privilege read and administrative access policies so public queries cannot read raw payloads or write forecast data; verify allowed and denied access with separate credentials.
 - [ ] 2.4 Document schema setup, migration execution, and safe rollback/re-sync procedures in the README; verify each documented setup command against a clean local environment.
-- [ ] 2.5 Add a forward-only migration that represents `F-D0047-091` locations as counties or cities without fabricated township identities; verify database constraints and migration tests pass.
+- [x] 2.5 Add a forward-only migration that represents `F-D0047-091` locations as counties or cities without fabricated township identities; verify database constraints and migration tests pass.
 
 ## 3. CWA county forecast ingestion and versioning
 
 - [x] 3.1 Implement a CWA `F-D0047-091` client that loads credentials from environment variables, handles timeouts and non-success responses, and saves fixture responses; verify unit tests cover successful and failed requests.
-- [ ] 3.2 Update defensive parsing and normalization for the current `F-D0047-091` county response shape, including case-compatible structural fields and supported weather elements; verify fixture and authorized live-response tests cover complete, missing, and invalid optional elements.
+- [x] 3.2 Update defensive parsing and normalization for the current `F-D0047-091` county response shape, including case-compatible structural fields and supported weather elements; verify fixture and authorized live-response tests cover complete, missing, and invalid optional elements.
 - [x] 3.3 Implement sync-run recording, canonical checksum generation, current-forecast replacement, immutable changed-version insertion, and raw-payload retention; verify tests prove duplicate content creates no second version and failed syncs preserve the current forecast.
-- [ ] 3.4 Update the scheduled/manual Python command for the county data model and verify it populates a development Supabase project from an authorized CWA response.
+- [x] 3.4 Update the scheduled/manual Python command for the county data model and verify it populates a development Supabase project from an authorized CWA response.
 - [ ] 3.5 Add GitHub Actions workflow(s) for manual dispatch and six-hour UTC scheduling after source publication, using GitHub Secrets only; verify the workflow passes in a repository run and its schedule is documented.
 
 ## 4. Forecast query boundary

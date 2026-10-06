@@ -17,7 +17,7 @@ from cwa_weather_ingestion.versioning import (
 
 def forecast() -> NormalizedForecast:
     return NormalizedForecast(
-        "臺北市", "630", "中正區", "6300100",
+        "Test County", "100",
         datetime(2026, 10, 5, tzinfo=timezone.utc),
         datetime(2026, 10, 5, 12, tzinfo=timezone.utc),
         max_temperature_c=28,
@@ -60,7 +60,7 @@ class VersioningTests(unittest.TestCase):
     def test_forecast_checksum_ignores_record_order(self) -> None:
         earlier = forecast()
         later = NormalizedForecast(
-            "Test County", "100", "Test Town", "10001",
+            "Another County", "200",
             datetime(2026, 10, 5, 12, tzinfo=timezone.utc),
             datetime(2026, 10, 6, tzinfo=timezone.utc),
         )

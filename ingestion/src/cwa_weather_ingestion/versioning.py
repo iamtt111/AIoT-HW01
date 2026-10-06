@@ -24,10 +24,8 @@ def canonical_forecast_checksum(forecasts: Sequence[NormalizedForecast]) -> str:
     """Hash normalized records, independent of source JSON ordering or metadata."""
     records = [
         {
-            "county_code": forecast.county_code,
-            "county_name": forecast.county_name,
-            "town_code": forecast.town_code,
-            "town_name": forecast.town_name,
+            "area_code": forecast.area_code,
+            "area_name": forecast.area_name,
             "valid_from": forecast.valid_from.isoformat(),
             "valid_to": forecast.valid_to.isoformat(),
             "weather_description": forecast.weather_description,
@@ -288,25 +286,24 @@ class PostgresVersionStore:
     @staticmethod
     def _upsert_locations(
         cursor: psycopg.Cursor[Any], forecasts: Sequence[NormalizedForecast]
-    ) -> dict[tuple[str, str], str]:
-        location_ids: dict[tuple[str, str], str] = {}
+    ) -> dict[str, str]:
+        location_ids: dict[str, str] = {}
         for forecast in forecasts:
-            if not forecast.county_code or not forecast.town_code:
-                raise ValueError("forecast location must include county_code and town_code")
-            key = (forecast.county_code, forecast.town_code)
+            if not forecast.area_code:
+                raise ValueError("forecast location must include area_code")
+            key = forecast.area_code
             if key in location_ids:
                 continue
             cursor.execute(
                 """
-                insert into public.locations (county_code, town_code, county_name, town_name)
-                values (%s, %s, %s, %s)
-                on conflict (county_code, town_code) do update
-                set county_name = excluded.county_name,
-                    town_name = excluded.town_name,
+                insert into public.locations (area_code, area_name)
+                values (%s, %s)
+                on conflict (area_code) do update
+                set area_name = excluded.area_name,
                     updated_at = now()
                 returning id
                 """,
-                (forecast.county_code, forecast.town_code, forecast.county_name, forecast.town_name),
+                (forecast.area_code, forecast.area_name),
             )
             location_ids[key] = str(cursor.fetchone()[0])
         return location_ids
@@ -314,7 +311,7 @@ class PostgresVersionStore:
     @staticmethod
     def _insert_records(
         cursor: psycopg.Cursor[Any], table_name: str, version_id: str,
-        forecasts: Sequence[NormalizedForecast], location_ids: dict[tuple[str, str], str],
+        forecasts: Sequence[NormalizedForecast], location_ids: dict[str, str],
     ) -> None:
         columns = """
           version_id, location_id, valid_from, valid_to, weather_description, weather_code,
@@ -324,11 +321,11 @@ class PostgresVersionStore:
         """
         values = []
         for forecast in forecasts:
-            if not forecast.county_code or not forecast.town_code:
-                raise ValueError("forecast location must include county_code and town_code")
+            if not forecast.area_code:
+                raise ValueError("forecast location must include area_code")
             values.append(
                 (
-                    version_id, location_ids[(forecast.county_code, forecast.town_code)],
+                    version_id, location_ids[forecast.area_code],
                     forecast.valid_from, forecast.valid_to, forecast.weather_description,
                     forecast.weather_code, forecast.precipitation_probability,
                     forecast.min_temperature_c, forecast.max_temperature_c,

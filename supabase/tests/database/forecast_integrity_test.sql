@@ -8,26 +8,24 @@ select has_index('public', 'forecast_records', 'forecast_records_location_period
 
 select lives_ok(
   $$
-    insert into public.locations (id, county_code, town_code, county_name, town_name)
+    insert into public.locations (id, area_code, area_name)
     values (
       '00000000-0000-0000-0000-000000000001',
       '100',
-      '10001',
-      '測試縣',
-      '測試鄉'
+      'Test County'
     )
   $$,
-  'first canonical location can be inserted'
+  'first canonical county location can be inserted'
 );
 
 select throws_ok(
   $$
-    insert into public.locations (county_code, town_code, county_name, town_name)
-    values ('100', '10001', '重複縣', '重複鄉')
+    insert into public.locations (area_code, area_name)
+    values ('100', 'Duplicate County')
   $$,
   '23505',
   null,
-  'duplicate county/town is rejected'
+  'duplicate county code is rejected'
 );
 
 insert into public.sync_runs (id, source_dataset_id)
