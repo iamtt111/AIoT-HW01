@@ -1,16 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getLatestForecasts, type ForecastFilters } from "@/lib/forecast-records";
+import { optionalForecastTime } from "@/lib/forecast-query-params";
 
 export const dynamic = "force-dynamic";
-
-function optionalIsoTime(value: string | null, field: string): string | undefined {
-  if (!value) return undefined;
-  if (Number.isNaN(Date.parse(value))) {
-    throw new Error(`${field} must be a valid ISO-8601 date or time`);
-  }
-  return value;
-}
 
 export async function GET(request: NextRequest) {
   const areaCode = request.nextUrl.searchParams.get("area_code")?.trim();
@@ -21,8 +14,8 @@ export async function GET(request: NextRequest) {
   try {
     const filters: ForecastFilters = {
       areaCode,
-      startsAt: optionalIsoTime(request.nextUrl.searchParams.get("starts_at"), "starts_at"),
-      endsAt: optionalIsoTime(request.nextUrl.searchParams.get("ends_at"), "ends_at"),
+      startsAt: optionalForecastTime(request.nextUrl.searchParams.get("starts_at"), "starts_at", "start"),
+      endsAt: optionalForecastTime(request.nextUrl.searchParams.get("ends_at"), "ends_at", "end"),
     };
     if (filters.startsAt && filters.endsAt && filters.startsAt > filters.endsAt) {
       return NextResponse.json({ error: "starts_at must not be after ends_at" }, { status: 400 });

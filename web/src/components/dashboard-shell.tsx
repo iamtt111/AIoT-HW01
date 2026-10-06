@@ -63,7 +63,6 @@ export function DashboardShell() {
   const [initialError, setInitialError] = useState(false);
   const [forecastError, setForecastError] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [loadingForecast, setLoadingForecast] = useState(false);
 
   const scope = useMemo(() => normalizeDateScope(startsAt, endsAt), [startsAt, endsAt]);
   const state = resolveDashboardState({ isLoading: loading, hasError: initialError, areaCount: areas.length, freshnessStatus: freshness.status ?? "empty" });
@@ -89,9 +88,15 @@ export function DashboardShell() {
 
   useEffect(() => {
     if (!areaCode) return;
-    setLoadingForecast(true);
-    setForecastError(false);
-    void requestRecords(areaCode, scope).then(setRecords).catch(() => setForecastError(true)).finally(() => setLoadingForecast(false));
+    let active = true;
+    void requestRecords(areaCode, scope)
+      .then((nextRecords) => {
+        if (!active) return;
+        setRecords(nextRecords);
+        setForecastError(false);
+      })
+      .catch(() => { if (active) setForecastError(true); });
+    return () => { active = false; };
   }, [areaCode, requestRecords, scope]);
 
   useEffect(() => {
@@ -114,6 +119,6 @@ export function DashboardShell() {
     <section className="grid gap-4 rounded-xl bg-white p-5 shadow-sm md:grid-cols-3"><label className="font-medium">{copy.county}<select className="mt-1 block w-full rounded-md border border-slate-300 p-2 font-normal" value={areaCode} onChange={(event) => setAreaCode(event.target.value)}><option value="">{copy.chooseCounty}</option>{areas.map((area) => <option key={area.areaCode} value={area.areaCode}>{area.areaName}</option>)}</select></label><label className="font-medium">{copy.startsAt}<input className="mt-1 block w-full rounded-md border border-slate-300 p-2 font-normal" type="date" value={startsAt} onChange={(event) => setDateScope(event.target.value, endsAt)} /></label><label className="font-medium">{copy.endsAt}<input className="mt-1 block w-full rounded-md border border-slate-300 p-2 font-normal" type="date" value={endsAt} onChange={(event) => setDateScope(startsAt, event.target.value)} /></label></section>
     {forecastError && <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900">{copy.requestError}</p>}
     <section className="rounded-xl bg-white p-5 shadow-sm"><div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-semibold">{copy.mapTitle}</h2><p className="text-sm text-slate-600">{copy.mapDescription}</p></div><label className="font-medium">{copy.indicator}<select className="ml-2 rounded-md border border-slate-300 p-2 font-normal" value={indicator} onChange={(event) => setIndicator(event.target.value as MapIndicator)}>{indicatorOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label></div><ForecastMap records={mapRecords} indicator={indicator} /></section>
-    <section className="rounded-xl bg-white p-5 shadow-sm"><h2 className="mb-4 text-xl font-semibold">{selectedArea?.areaName ?? copy.chooseCounty}{copy.detailSuffix}</h2>{loadingForecast ? <p className="text-slate-600">{copy.loadingForecast}</p> : <ForecastDetails records={records} />}</section>
+    <section className="rounded-xl bg-white p-5 shadow-sm"><h2 className="mb-4 text-xl font-semibold">{selectedArea?.areaName ?? copy.chooseCounty}{copy.detailSuffix}</h2><ForecastDetails records={records} /></section>
   </section></main>;
 }

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { getCurrentAreas, selectAreas } from "@/lib/forecast-locations";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     return NextResponse.json({ areas: selectAreas(await getCurrentAreas()) });
   } catch (error) {
