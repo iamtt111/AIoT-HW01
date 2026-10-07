@@ -20,10 +20,10 @@
 
 ## 4. Responsive visual system and documentation
 
-- [ ] 4.1 Apply the deep-blue/indigo, map-first visual system with limited high-contrast translucent panels for desktop and narrow viewports; verify a manual responsive check shows no horizontal page overflow and usable map controls at mobile width.
-- [ ] 4.2 Update the README dashboard guide to explain map selection, the 12-hour period navigator, indicator-linked chart, freshness control, and accessible fallback selector; verify the instructions match a local preview.
+- [x] 4.1 Apply the deep-blue/indigo, map-first visual system with limited high-contrast translucent panels for desktop and narrow viewports; verify a manual responsive check shows no horizontal page overflow and usable map controls at mobile width.
+- [x] 4.2 Update the README dashboard guide to explain map selection, the 12-hour period navigator, indicator-linked chart, freshness control, and accessible fallback selector; verify the instructions match a local preview.
 
 ## 5. Integration verification
 
 - [x] 5.1 Run the frontend test suite, lint, client-secret check, and production build; verify all commands pass.
-- [ ] 5.2 Perform a populated-data acceptance check for map selection, date/period navigation, all four indicator charts, summary card, weather icons, stale status, keyboard fallback, and narrow-viewport behavior; record the results in project documentation.
+- [x] 5.2 Perform a populated-data acceptance check for map selection, date/period navigation, all four indicator charts, summary card, weather icons, stale status, keyboard fallback, and narrow-viewport behavior; record the results in project documentation.
