@@ -13,9 +13,9 @@ import { ForecastMap } from "./forecast-map";
 vi.mock("react-leaflet", () => ({
   MapContainer: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   TileLayer: () => null,
-  GeoJSON: ({ data, onEachFeature }: { data: CountyCollection; onEachFeature: (feature: CountyCollection["features"][number], layer: { bindTooltip: () => void; on: (handlers: { click?: () => void }) => void }) => void }) => <div>{data.features.map((feature) => {
+  GeoJSON: ({ data, onEachFeature }: { data: CountyCollection; onEachFeature: (feature: CountyCollection["features"][number], layer: { bindTooltip: (...args: unknown[]) => void; openTooltip: () => void; on: (handlers: { click?: () => void }) => void }) => void }) => <div>{data.features.map((feature) => {
     let click: (() => void) | undefined;
-    onEachFeature(feature, { bindTooltip: () => undefined, on: (handlers) => { click = handlers.click; } });
+    onEachFeature(feature, { bindTooltip: () => undefined, openTooltip: () => undefined, on: (handlers) => { click = handlers.click; } });
     return <button key={feature.properties?.cwa_area_code} type="button" onClick={() => click?.()}>{feature.properties?.area_name}</button>;
   })}</div>,
 }));
@@ -61,5 +61,12 @@ describe("ForecastMap", () => {
 
     await waitFor(() => expect(screen.getByText("\u8cc7\u6599\u53ef\u80fd\u5df2\u904e\u671f")).toBeTruthy());
     expect(screen.getAllByText(/\u7121\u8cc7\u6599/).length).toBeGreaterThan(0);
+  });
+
+  it("uses concise rainfall wording in the map controls", async () => {
+    render(<ForecastMap records={[record]} periods={periods} activePeriodId={periods[0].id} indicator="temperature" selectedAreaCode="" freshness={{ status: "fresh", lastSuccessfulAt: null }} onAreaSelect={vi.fn()} onPeriodSelect={vi.fn()} onIndicatorSelect={vi.fn()} />);
+
+    await screen.findByRole("button", { name: "\u964d\u96e8" });
+    expect(screen.queryByRole("button", { name: "\u964d\u96e8\u6a5f\u7387" })).toBeNull();
   });
 });
