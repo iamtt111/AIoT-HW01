@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { indicatorChartSeries, weatherPresentation } from "./weather-presentation";
+import { apparentTemperatureSummary, indicatorChartSeries, weatherPresentation, weatherSourceExtras, weatherSummary, windForceLabel, windSummary } from "./weather-presentation";
 import type { ForecastRecord } from "./forecast-records";
 
 const record: ForecastRecord = {
@@ -21,5 +21,19 @@ describe("weather presentation", () => {
     expect(indicatorChartSeries([record], "precipitation")[0].primary).toBe(60);
     expect(indicatorChartSeries([{ ...record, uvIndex: null }], "uv")[0].primary).toBeNull();
     expect(indicatorChartSeries([record], "wind")[0].primary).toBe(3.5);
+  });
+
+  it("formats persisted apparent temperature and wind values for detailed forecasts", () => {
+    expect(apparentTemperatureSummary(21, 22)).toBe("\u9ad4\u611f\uff1a21\u00b0C - 22\u00b0C");
+    expect(apparentTemperatureSummary(null, null)).toBeNull();
+    expect(windSummary(270, null, 2)).toBe("\u504f\u897f\u98a8 \u98a8\u901f2\u7d1a\uff082 m/s\uff09");
+    expect(windForceLabel(2)).toBe("2\u7d1a");
+    expect(windSummary(null, "\u504f\u6771\u98a8", null)).toBe("\u504f\u6771\u98a8");
+  });
+
+  it("splits the CWA source sentence into a compact summary and non-duplicated extras", () => {
+    const source = "\u9670\u77ed\u66ab\u9663\u96e8\u3002\u964d\u96e8\u6a5f\u738730%\u3002\u6eab\u5ea6\u651d\u6c0f21\u81f325\u5ea6\u3002\u8212\u9069\u3002\u504f\u897f\u98a8 \u98a8\u901f2\u7d1a(2\u516c\u5c3a)\u3002\u76f8\u5c0d\u6fd5\u5ea671%\u3002";
+    expect(weatherSummary(source, "\u591a\u96f2")).toBe("\u9670\u77ed\u66ab\u9663\u96e8");
+    expect(weatherSourceExtras(source)).toEqual({ comfort: "\u8212\u9069", relativeHumidity: "\u76f8\u5c0d\u6fd5\u5ea671%" });
   });
 });
