@@ -21,7 +21,7 @@ type ForecastResponse = { records?: ForecastRecord[] };
 const copy = {
   product: "CWA \u5929\u6c23\u9810\u5831",
   title: "\u63a2\u7d22\u81fa\u7063\u7684\u672a\u4f86\u5929\u6c23",
-  subtitle: "\u9ede\u9078\u5730\u5716\u7e23\u5e02\uff0c\u5373\u53ef\u67e5\u770b\u672a\u4f86\u4e00\u9031\u7684\u9810\u5831\u8b8a\u5316\u3002",
+  subtitle: "\u9ede\u9078\u5730\u5716\u7e23\u5e02\uff0c\u5373\u53ef\u67e5\u770b\u672a\u4f86\u4e00\u9031\u7684\u9810\u5831\u8b8a\u5316",
   loading: "\u6b63\u5728\u8f09\u5165\u9810\u5831\u5730\u5716\u2026",
   error: "\u66ab\u6642\u7121\u6cd5\u53d6\u5f97\u9810\u5831\u8cc7\u6599",
   empty: "\u5c1a\u7121\u53ef\u986f\u793a\u7684\u9810\u5831\u8cc7\u6599",
@@ -29,7 +29,6 @@ const copy = {
   requestError: "\u66ab\u6642\u7121\u6cd5\u66f4\u65b0\u6240\u9078\u9810\u5831\uff1b\u6b63\u4fdd\u7559\u4e0a\u4e00\u6b21\u6210\u529f\u986f\u793a\u7684\u8cc7\u6599\u3002",
   county: "\u7e23\u5e02",
   chooseCounty: "\u8acb\u9078\u64c7\u7e23\u5e02",
-  fallbackHint: "\u4e5f\u53ef\u4f7f\u7528\u6b64\u9078\u55ae\u9078\u64c7\u7e23\u5e02",
   startsAt: "\u958b\u59cb\u65e5\u671f",
   endsAt: "\u7d50\u675f\u65e5\u671f",
   dateRange: "\u9810\u5831\u7bc4\u570d",
@@ -153,7 +152,7 @@ export function DashboardShell() {
   };
 
   return <main className="min-h-screen overflow-x-hidden bg-[#020617] text-slate-100"><section className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8">
-    <header className="mb-5 flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="text-sm font-semibold tracking-[0.2em] text-sky-300">{copy.product}</p><h1 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-5xl">{copy.title}</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">{copy.subtitle}</p></div><div className="w-full max-w-xs text-sm font-semibold text-slate-200"><label htmlFor="county-selector" className="mb-2 flex items-center gap-2"><MapPinned className="h-4 w-4 text-sky-300" aria-hidden="true" />{copy.county}</label><select id="county-selector" className="block w-full rounded-xl border border-white/15 bg-slate-900 px-3 py-2.5 text-white shadow-lg outline-none transition focus:border-sky-300 focus:ring-2 focus:ring-sky-300/30" value={areaCode} onChange={(event) => selectArea(event.target.value, false)} aria-describedby="county-fallback-help"><option value="">{copy.chooseCounty}</option>{areas.map((area) => <option key={area.areaCode} value={area.areaCode}>{area.areaName}</option>)}</select><span id="county-fallback-help" className="mt-1 block font-normal text-slate-400">{copy.fallbackHint}</span></div></header>
+    <header className="mb-5 flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="text-sm font-semibold tracking-[0.2em] text-sky-300">{copy.product}</p><h1 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-5xl">{copy.title}</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">{copy.subtitle}</p></div><div className="w-full max-w-xs text-sm font-semibold text-slate-200"><label htmlFor="county-selector" className="mb-2 flex items-center gap-2"><MapPinned className="h-4 w-4 text-sky-300" aria-hidden="true" />{copy.county}</label><select id="county-selector" className="block w-full rounded-xl border border-white/15 bg-slate-900 px-3 py-2.5 text-white shadow-lg outline-none transition focus:border-sky-300 focus:ring-2 focus:ring-sky-300/30" value={areaCode} onChange={(event) => selectArea(event.target.value, false)} aria-describedby="county-fallback-help"><option value="">{copy.chooseCounty}</option>{areas.map((area) => <option key={area.areaCode} value={area.areaCode}>{area.areaName}</option>)}</select></div></header>
 
     {state !== "ready" && <p role="status" className={`mb-5 rounded-2xl border p-4 text-sm ${state === "error" ? "border-rose-400/40 bg-rose-950/40 text-rose-100" : "border-sky-300/20 bg-slate-900 text-slate-200"}`}>{initialStateLabel(state)}</p>}
     {forecastError && <p role="status" className="mb-5 rounded-2xl border border-amber-300/30 bg-amber-950/35 p-4 text-sm text-amber-100">{copy.requestError}</p>}
